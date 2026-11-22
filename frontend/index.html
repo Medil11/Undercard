@@ -82,6 +82,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* Layout */
 .shell{max-width:1160px;margin:0 auto;padding:20px;display:grid;grid-template-columns:minmax(0,880px);justify-content:center;gap:20px;align-items:start}
 .shell.wide{grid-template-columns:240px minmax(0,880px)}
+.shell.wide.three{max-width:1480px;grid-template-columns:240px minmax(0,1fr) 340px}
+.rside{padding:0}
+.rside .stand td,.rside .stand th{padding-left:12px;padding-right:12px}
 .col{display:grid;gap:16px;min-width:0}
 .side{position:sticky;top:128px;padding:8px;max-height:calc(100vh - 148px);overflow-y:auto}
 .side[hidden]{display:none}
@@ -225,7 +228,7 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
   .sec{grid-area:sec;height:44px}
   .sec a{padding:0 12px}
   .seg{justify-self:stretch}
-  .shell.wide{grid-template-columns:1fr}
+  .shell.wide,.shell.wide.three{grid-template-columns:1fr}
   .side{position:static;max-height:240px}
   .news .nw{grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px}
   .news .pic{width:96px;height:64px}
@@ -260,6 +263,7 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
     <div class="seg" id="tabs" role="tablist" aria-label="Match status"></div>
     <main id="list" aria-live="polite"></main>
   </div>
+  <aside class="side rside" id="right" aria-label="Standings" hidden></aside>
 </div>
 <p class="foot" id="foot"></p>
 <script>
@@ -444,11 +448,13 @@ function renderList(){
       list.map(row).join("")+`</section>`}).join("");
   // a league: standings of its current tournament (the live one, else the latest played)
   const cur=lg&&(ms.find(m=>m.status==="running")||sorted.find(m=>m.status==="finished")||sorted[0]);
-  if(cur&&!demo&&cur.source!=="startgg")addStandings(cur.id,new Set(),"afterbegin",`Standings, ${cur.tournament_name||lg}`,()=>L===lg&&!CUR&&!NEWS_ON);
+  if(lg&&!(cur&&!demo&&cur.source!=="startgg"))showRight("");
+  if(cur&&!demo&&cur.source!=="startgg")addStandings(cur.id,new Set(),"right",`Standings, ${cur.tournament_name||lg}`,()=>L===lg&&!CUR&&!NEWS_ON);
 }
 function renderSide(){
   const side=document.getElementById("side"),show=!NEWS_ON&&!CUR&&G!=="all";
   side.hidden=!show;document.getElementById("shell").classList.toggle("wide",show);
+  if(!show||!L)showRight("");
   if(!show)return;
   const list=LEAGUES[G];
   if(!list){side.innerHTML=`<h2>Leagues</h2><p class="note">Loading</p>`;loadLeagues(G).then(()=>G in LEAGUES&&renderSide());return}
@@ -461,14 +467,25 @@ async function loadLeagues(g){
   try{const r=await fetch(base()+"/leagues?videogame="+encodeURIComponent(g));LEAGUES[g]=r.ok?await r.json():[]}catch{LEAGUES[g]=[]}
 }
 /* Standings of a tournament, from any of its matches */
-async function addStandings(id,mine,pos,title,still){
+function showRight(html){
+  const r=document.getElementById("right");
+  r.innerHTML=html;r.hidden=!html;document.getElementById("shell").classList.toggle("three",!!html);
+}
+// "right": compact table in the right column (league view); otherwise a card at the end of the list
+async function addStandings(id,mine,where,title,still){
   let rows=[];
   try{const r=await fetch(base()+"/matches/"+id+"/standings");if(r.ok)rows=await r.json()}catch{}
-  if(!still()||!rows.length)return;
-  document.getElementById("stand")?.remove();
-  document.getElementById("list").insertAdjacentHTML(pos,`<section class="card" id="stand"><div class="sec-h"><h2>${esc(title)}</h2></div><table class="stand"><thead><tr><th>#</th><th>Team</th><th>Last match</th></tr></thead><tbody>${rows.map(r=>{
+  if(!still())return;
+  const right=where==="right";
+  if(!rows.length){if(right)showRight("");return}
+  const html=`<section class="card" id="stand"><div class="sec-h"><h2>${esc(title)}</h2></div><table class="stand"><thead><tr><th>#</th><th>Team</th><th>${right?"Last":"Last match"}</th></tr></thead><tbody>${rows.map(r=>{
     const lm=r.last_match,res=lm?.winner_id?(lm.winner_id===r.team.id?"W":"L"):"";
-    return`<tr class="${mine.has(r.team.id)?"me":""}"><td class="num">${r.rank}</td><td><span class="tm">${av(r.team)}${esc(r.team.name)}</span></td><td>${lm?`${res?`<b class="res ${res}">${res}</b>`:""}<a href="#/match/${lm.id}">${esc(lm.name)}</a>`:""}</td></tr>`}).join("")}</tbody></table></section>`);
+    const last=!lm?"":right?(res?`<a href="#/match/${lm.id}" title="${esc(lm.name)}"><b class="res ${res}">${res}</b></a>`:`<a href="#/match/${lm.id}" title="${esc(lm.name)}">View</a>`)
+      :`${res?`<b class="res ${res}">${res}</b>`:""}<a href="#/match/${lm.id}">${esc(lm.name)}</a>`;
+    return`<tr class="${mine.has(r.team.id)?"me":""}"><td class="num">${r.rank}</td><td><span class="tm">${av(r.team)}${esc(r.team.name)}</span></td><td>${last}</td></tr>`}).join("")}</tbody></table></section>`;
+  if(right){showRight(html);return}
+  document.getElementById("stand")?.remove();
+  document.getElementById("list").insertAdjacentHTML("beforeend",html);
 }
 function render(){renderNav();renderSide();if(NEWS_ON)renderNews();else if(CUR)showMatch(CUR,false);else renderList()}
 
@@ -517,7 +534,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("click",async e=>{
   const g=e.target.closest("[data-g]"),v=e.target.closest("[data-v]");
   const l=e.target.closest("[data-l]");
-  if(l){L=l.dataset.l||null;DAY=[];render();await loadDay();render();return}
+  if(l){L=l.dataset.l||null;DAY=[];showRight("");render();await loadDay();render();return}
   if((g||v)&&L){L=null;if(!v)await loadDay()}  // leaving a league: back to the day lists
   if(g)G=g.dataset.g;
   if(v){const x=v.dataset.v;V=x==="live"||x==="team"?x:+x;await loadDay()}
@@ -546,7 +563,7 @@ async function showMatch(id,top){
   document.title=m?`${m.team1?.name||"TBD"} vs ${m.team2?.name||"TBD"} · Undercard`:"Undercard";
   if(top)window.scrollTo(0,0);
   if(demo||!m||m.source==="startgg")return;
-  addStandings(id,new Set([m.team1?.id,m.team2?.id]),"beforeend","Standings",()=>CUR===id);
+  addStandings(id,new Set([m.team1?.id,m.team2?.id]),"list","Standings",()=>CUR===id);
 }
 function renderDetail(m){
   const live=m.status==="running",fin=m.status==="finished",scored=live||fin;
