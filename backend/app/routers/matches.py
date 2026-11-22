@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
@@ -13,7 +15,9 @@ router = APIRouter(tags=["matches"])
 def list_matches(
     status: str | None = Query(None, description="not_started | running | finished"),
     videogame: str | None = Query(None, description="e.g. league-of-legends, cs-go, dota-2"),
-    limit: int = Query(50, ge=1, le=200),
+    since: datetime | None = Query(None, description="scheduled at or after (ISO 8601)"),
+    until: datetime | None = Query(None, description="scheduled before (ISO 8601)"),
+    limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
 ) -> list[Match]:
     query = select(Match).options(selectinload(Match.team1), selectinload(Match.team2))
@@ -21,6 +25,10 @@ def list_matches(
         query = query.where(Match.status == status)
     if videogame:
         query = query.where(Match.videogame == videogame)
+    if since:
+        query = query.where(Match.scheduled_at >= since)
+    if until:
+        query = query.where(Match.scheduled_at < until)
     order = Match.scheduled_at.desc() if status == "finished" else Match.scheduled_at.asc()
     return list(db.scalars(query.order_by(order).limit(limit)))
 

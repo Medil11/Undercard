@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class TeamOut(BaseModel):
@@ -31,6 +31,12 @@ class MatchOut(BaseModel):
     team1_score: int | None = None
     team2_score: int | None = None
     winner_id: int | None = None
+
+    @field_validator("scheduled_at", "begin_at", "end_at")
+    @classmethod
+    def assume_utc(cls, value: datetime | None) -> datetime | None:
+        """Times are stored in UTC; SQLite drops the offset, so put it back for the browser."""
+        return value.replace(tzinfo=UTC) if value and value.tzinfo is None else value
 
 
 class PlayerOut(BaseModel):

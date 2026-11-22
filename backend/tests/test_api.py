@@ -1,5 +1,7 @@
+from datetime import UTC, datetime, timedelta
+
 from app.models import Player
-from ingestion.sync import upsert_match
+from ingestion.sync import record_sync, upsert_match
 from tests.sample_payloads import FINISHED_MATCH, UPCOMING_MATCH_TBD
 
 
@@ -47,3 +49,28 @@ def test_videogames(client, db):
     seed(db)
     slugs = {v["slug"]: v["matches"] for v in client.get("/videogames").json()}
     assert slugs == {"cs-go": 1, "league-of-legends": 1}
+
+
+def test_list_matches_by_date_window(client, db):
+    seed(db)  # finished on 2026-11-20, upcoming on 2026-11-25
+    day = client.get(
+        "/matches", params={"since": "2026-11-20T00:00:00Z", "until": "2026-11-21T00:00:00Z"}
+    )
+    assert [m["id"] for m in day.json()] == [1001]
+    later = client.get("/matches", params={"since": "2026-11-21T00:00:00Z"})
+    assert [m["id"] for m in later.json()] == [1002]
+
+
+def test_health_sync_reports_freshness(client, db):
+    assert client.get("/health/sync").status_code == 503  # never synced
+    record_sync(db, datetime.now(UTC), count=7)
+    body = client.get("/health/sync").json()
+    assert (body["status"], body["last_count"]) == ("ok", 7)
+    record_sync(db, datetime.now(UTC) - timedelta(minutes=30), count=7)
+    stale = client.get("/health/sync")
+    assert (stale.status_code, stale.json()["status"]) == (503, "stale")
+
+
+def test_times_are_returned_with_a_timezone(client, db):
+    seed(db)
+    assert client.get("/matches/1001").json()["scheduled_at"].endswith(("Z", "+00:00"))
