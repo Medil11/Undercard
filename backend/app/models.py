@@ -17,6 +17,10 @@ class Team(Base):
     name: Mapped[str] = mapped_column(String(200))
     acronym: Mapped[str | None] = mapped_column(String(50))
     image_url: Mapped[str | None] = mapped_column(String(500))
+    # "pandascore" or "startgg" (start.gg ids are stored negated, see ingestion/startgg.py)
+    source: Mapped[str] = mapped_column(
+        String(20), default="pandascore", server_default="pandascore"
+    )
     # Rosters come from a separate, rate-limited endpoint, so they are refreshed on their own clock.
     roster_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -67,6 +71,9 @@ class Match(Base):
     __tablename__ = "matches"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    source: Mapped[str] = mapped_column(
+        String(20), default="pandascore", server_default="pandascore"
+    )
     videogame: Mapped[str] = mapped_column(String(50), index=True)
     name: Mapped[str] = mapped_column(String(300))
     # PandaScore statuses: not_started | running | finished | canceled | postponed

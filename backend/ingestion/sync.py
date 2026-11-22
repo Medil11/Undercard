@@ -17,6 +17,7 @@ from app.config import get_settings
 from app.db import SessionLocal
 from app.models import Game, Match, Player, SyncStatus, Team
 from ingestion.pandascore_client import MAX_PAGE_SIZE, STATUSES, PandaScoreClient
+from ingestion.startgg import StartggClient, sync_startgg
 
 log = logging.getLogger("ingestion")
 
@@ -120,6 +121,7 @@ def refresh_rosters(
     now = now or datetime.now(UTC)
     stale = session.scalars(
         select(Team)
+        .where(Team.source == "pandascore")
         .where(or_(Team.roster_synced_at.is_(None), Team.roster_synced_at < now - max_age))
         .order_by(Team.roster_synced_at.is_not(None), Team.roster_synced_at)
         .limit(MAX_PAGE_SIZE)
@@ -156,6 +158,7 @@ def refresh_stale(session: Session, client: PandaScoreClient, seen: set[int], no
     stale = session.scalars(
         select(Match)
         .where(
+            Match.source == "pandascore",
             Match.id.not_in(seen),
             or_(
                 Match.status == "running",
@@ -210,6 +213,7 @@ def sync_once(
     statuses: tuple[str, ...] = STATUSES,
     per_page: int = MAX_PAGE_SIZE,
     now: datetime | None = None,
+    startgg: StartggClient | None = None,
 ) -> int:
     now = now or datetime.now(UTC)
     count = skipped = 0
@@ -227,6 +231,12 @@ def sync_once(
     log.info("synced %d matches, skipped %d player matches", count, skipped)
     refresh_stale(session, client, seen, now)
     refresh_rosters(session, client, now=now)
+    if startgg is not None:
+        try:  # a start.gg outage must not stop the PandaScore data
+            count += sync_startgg(session, startgg, now=now)
+        except Exception:
+            session.rollback()
+            log.exception("start.gg sync failed")
     purge_old(session, now)
     record_sync(session, now, count=count)
     return count
@@ -241,11 +251,12 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     settings = get_settings()
 
+    startgg = StartggClient(settings.startgg_token) if settings.startgg_token else None
     with PandaScoreClient(settings.pandascore_token, settings.pandascore_base_url) as client:
         while True:
             try:
                 with SessionLocal() as session:
-                    sync_once(session, client)
+                    sync_once(session, client, startgg=startgg)
             except Exception as exc:
                 log.exception("sync failed")
                 with SessionLocal() as session:

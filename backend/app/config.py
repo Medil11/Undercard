@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./esport_live.db"
     pandascore_token: str = ""
     pandascore_base_url: str = "https://api.pandascore.co"
+    # Optional: fighting games from start.gg. Empty disables that source.
+    startgg_token: str = ""
     # Shared with the Supabase cron job that calls POST /internal/sync. Empty disables the route.
     sync_secret: str = ""
 

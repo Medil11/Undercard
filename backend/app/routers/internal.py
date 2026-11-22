@@ -14,11 +14,21 @@ from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, status
 from app.config import get_settings
 from app.db import SessionLocal
 from ingestion.pandascore_client import PandaScoreClient
+from ingestion.startgg import StartggClient
 from ingestion.sync import record_sync, sync_once
 
 router = APIRouter(tags=["internal"], include_in_schema=False)
 log = logging.getLogger("ingestion")
 _running = threading.Lock()  # one cycle at a time, even if calls pile up
+_startgg: StartggClient | None = None
+
+
+def startgg_client() -> StartggClient | None:
+    global _startgg
+    token = get_settings().startgg_token
+    if token and _startgg is None:
+        _startgg = StartggClient(token)
+    return _startgg if token else None
 
 
 def run_sync() -> None:
@@ -26,7 +36,7 @@ def run_sync() -> None:
         settings = get_settings()
         with PandaScoreClient(settings.pandascore_token, settings.pandascore_base_url) as client:
             with SessionLocal() as session:
-                sync_once(session, client)
+                sync_once(session, client, startgg=startgg_client())
     except Exception as exc:
         log.exception("scheduled sync failed")
         try:

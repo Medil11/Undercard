@@ -81,3 +81,62 @@ TEAMS_WITH_PLAYERS = [
     },
     {"id": 12, "players": []},
 ]
+
+# Shapes copied from real start.gg responses (KAGARIBI #16 Top 8), trimmed.
+STARTGG_EVENT = {
+    "id": 1711972,
+    "tournament": "KAGARIBI #16",
+    "videogame": "ssbu",
+    "state": "COMPLETED",
+    "phases": [2416736],
+}
+STARTGG_SET = {
+    "id": 110480939,
+    "bestOf": 3,
+    "totalGames": 5,
+    "fullRoundText": "Grand Final",
+    "startAt": None,
+    "startedAt": 1795347416,
+    "completedAt": 1795347416,
+    "winnerId": 24883244,
+    "phaseGroup": {"phase": {"name": "TOP 8"}},
+    "stream": {"streamName": "eastgeek", "streamSource": "TWITCH"},
+    "games": [
+        {"id": 901, "orderNum": 1, "winnerId": 24883244},
+        {"id": 902, "orderNum": 2, "winnerId": 24883244},
+        {"id": 903, "orderNum": 3, "winnerId": 24883244},
+    ],
+    "slots": [
+        {
+            "entrant": {
+                "id": 24883244,
+                "name": "E36 | Hurt",
+                "participants": [
+                    {
+                        "gamerTag": "Hurt",
+                        "prefix": "E36",
+                        "user": {"images": [{"url": "https://images.start.gg/hurt.jpg"}]},
+                    }
+                ],
+            },
+            "standing": {"stats": {"score": {"value": 3}}},
+        },
+        {
+            "entrant": {
+                "id": 24911051,
+                "name": "Saya",
+                "participants": [{"gamerTag": "Saya", "prefix": None, "user": None}],
+            },
+            "standing": {"stats": {"score": {"value": 0}}},
+        },
+    ],
+}
+STARTGG_SET_TBD = {
+    **STARTGG_SET,
+    "id": 110477945,
+    "startedAt": None,
+    "completedAt": None,
+    "winnerId": None,
+    "games": None,
+    "slots": [{"entrant": None, "standing": None}, {"entrant": None, "standing": None}],
+}
