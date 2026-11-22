@@ -3,13 +3,15 @@ from datetime import UTC, datetime, timedelta
 import httpx
 from sqlalchemy import select
 
-from app.models import Game, Match, Player, Team
+from app.models import Game, Match, Player, SyncStatus, Team
 from ingestion.pandascore_client import PandaScoreClient
 from ingestion.sync import (
     parse_games,
     parse_match,
     pick_stream,
+    purge_old,
     refresh_rosters,
+    refresh_stale,
     sync_once,
     upsert_match,
 )
@@ -20,14 +22,19 @@ from tests.sample_payloads import (
     UPCOMING_MATCH_TBD,
 )
 
+NOW = datetime(2026, 11, 22, 12, 0, tzinfo=UTC)  # fixed, so retention does not age the fixtures
 
-def mock_client(teams_calls: list | None = None) -> PandaScoreClient:
+
+def mock_client(teams_calls: list | None = None, by_id: list | None = None) -> PandaScoreClient:
     def handler(request: httpx.Request) -> httpx.Response:
         path = request.url.path
+        first_page = request.url.params.get("page", "1") == "1"
         if path.endswith("/past"):
-            return httpx.Response(200, json=[FINISHED_MATCH, PLAYER_MATCH])
+            return httpx.Response(200, json=[FINISHED_MATCH, PLAYER_MATCH] if first_page else [])
         if path.endswith("/upcoming"):
-            return httpx.Response(200, json=[UPCOMING_MATCH_TBD])
+            return httpx.Response(200, json=[UPCOMING_MATCH_TBD] if first_page else [])
+        if path == "/matches":
+            return httpx.Response(200, json=by_id or [])
         if path == "/teams":
             if teams_calls is not None:
                 teams_calls.append(request.url.params["filter[id]"])
@@ -62,7 +69,7 @@ def test_upsert_is_idempotent(db):
 
 def test_sync_once_with_mocked_api(db):
     client = mock_client()
-    assert sync_once(db, client) == 2
+    assert sync_once(db, client, now=NOW) == 2
     assert db.get(Match, 1001).status == "finished"
     assert db.get(Match, 1003) is None  # player vs player matches are skipped
 
@@ -106,3 +113,47 @@ def test_refresh_rosters_detaches_players_who_left(db):
     db.commit()
     refresh_rosters(db, mock_client())
     assert db.get(Player, 999).team_id is None
+
+
+def test_sync_records_its_last_success(db):
+    sync_once(db, mock_client(), now=NOW)
+    status = db.get(SyncStatus, 1)
+    assert status.last_count == 2 and status.last_success_at is not None
+
+
+def test_refresh_stale_updates_or_removes_ghost_matches(db):
+    late = {**UPCOMING_MATCH_TBD, "id": 2001, "scheduled_at": "2026-11-22T08:00:00Z"}
+    gone = {**UPCOMING_MATCH_TBD, "id": 2002, "scheduled_at": "2026-11-22T09:00:00Z"}
+    future = {**UPCOMING_MATCH_TBD, "id": 2003, "scheduled_at": "2026-11-23T09:00:00Z"}
+    for payload in (late, gone, future):
+        upsert_match(db, payload)
+    db.commit()
+    now_finished = {**late, "status": "finished"}
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.params["filter[id]"])
+        return httpx.Response(200, json=[now_finished])
+
+    client = PandaScoreClient("fake", transport=httpx.MockTransport(handler))
+    assert refresh_stale(db, client, seen=set(), now=NOW) == 2
+    assert calls == ["2001,2002"]  # one request, only late matches (not the future one)
+    assert db.get(Match, 2001).status == "finished"
+    assert db.get(Match, 2002) is None  # no longer known by the provider
+    assert db.get(Match, 2003).status == "not_started"
+
+
+def test_refresh_stale_skips_matches_seen_this_cycle(db):
+    upsert_match(db, {**UPCOMING_MATCH_TBD, "id": 2001, "scheduled_at": "2026-11-22T08:00:00Z"})
+    db.commit()
+    client = PandaScoreClient("fake", transport=httpx.MockTransport(lambda r: 1 / 0))
+    assert refresh_stale(db, client, seen={2001}, now=NOW) == 0
+
+
+def test_purge_old_removes_matches_and_games(db):
+    upsert_match(db, FINISHED_MATCH)  # 2026-11-20, with 3 games
+    db.commit()
+    assert purge_old(db, NOW + timedelta(days=27)) == 0  # 2026-11-20 is still within 30 days
+    assert purge_old(db, NOW + timedelta(days=31)) == 1
+    assert db.get(Match, 1001) is None
+    assert db.scalars(select(Game)).all() == []

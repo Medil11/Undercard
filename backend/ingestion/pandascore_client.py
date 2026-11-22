@@ -21,17 +21,29 @@ class PandaScoreClient:
             transport=transport,
         )
 
-    def matches(self, status: str, per_page: int = 50, videogame: str | None = None) -> list[dict]:
+    def matches(
+        self, status: str, per_page: int = 50, videogame: str | None = None, page: int = 1
+    ) -> list[dict]:
         if status not in STATUSES:
             raise ValueError(f"status must be one of {STATUSES}")
         params: dict[str, str | int] = {
             "per_page": per_page,
             # begin_at is null until a match starts and nulls sort first, so use scheduled_at.
             "sort": "-scheduled_at" if status == "past" else "scheduled_at",
+            "page": page,
         }
         if videogame:
             params["filter[videogame]"] = videogame
         response = self._http.get(f"/matches/{status}", params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def matches_by_ids(self, ids: list[int]) -> list[dict]:
+        """Fetch up to 100 matches by id, whatever their status, in a single request."""
+        if not 0 < len(ids) <= MAX_PAGE_SIZE:
+            raise ValueError(f"pass between 1 and {MAX_PAGE_SIZE} match ids")
+        params = {"filter[id]": ",".join(map(str, ids)), "per_page": MAX_PAGE_SIZE}
+        response = self._http.get("/matches", params=params)
         response.raise_for_status()
         return response.json()
 

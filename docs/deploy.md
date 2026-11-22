@@ -10,8 +10,10 @@ Browser -----------------------------------------------------------+--> Supabase
 - **Render** runs one free web service: the API, the static front, and the sync triggered by the scheduler.
   The call every minute also keeps the instance awake. One always-on service uses about 744 of the
   750 free hours a month, so keep it the only free service in the Render workspace.
-- The PandaScore token only lives in Render's environment. One cycle is 3 requests plus at most 1 for
-  rosters, so about 240 per hour out of the 1,000 allowed.
+- The PandaScore token only lives in Render's environment. One cycle is at most 6 requests (live, 2 pages
+  of upcoming, past, 1 batch of rosters, 1 batch of stale matches re-checked by id), so at most 360 per hour
+  out of the 1,000 allowed.
+- Matches older than 30 days are deleted at the end of each cycle, so the database stays small.
 
 ## 1. Supabase project
 
@@ -35,6 +37,19 @@ Browser -----------------------------------------------------------+--> Supabase
 2. Paste it into the Supabase **SQL editor** and run it.
 3. Within two minutes, Render's logs show `synced N matches` every minute, and the site has data.
    The checks at the bottom of the SQL file show the job runs and the HTTP responses (expect 202).
+
+## 4. Monitoring (recommended)
+
+`GET /health/sync` returns `200` while the last successful sync is under 10 minutes old, and `503` otherwise,
+with the last error in the body. Point a free uptime monitor at it to get an email when ingestion stops
+(expired token, PandaScore quota, Render hours used up):
+
+1. Create a free account on an uptime service such as UptimeRobot.
+2. Add an HTTP(s) monitor on `https://<service>.onrender.com/health/sync`, every 5 minutes.
+3. Set the alert contact to your email. A `503` or a timeout raises an alert.
+
+Keep `/health` (always `200`) as Render's health check: Render restarts services whose health check fails,
+and a stale sync is not a reason to restart the web service.
 
 ## Updating
 

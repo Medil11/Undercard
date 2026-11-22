@@ -7,13 +7,14 @@ The call also keeps the free Render instance awake.
 import hmac
 import logging
 import threading
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, status
 
 from app.config import get_settings
 from app.db import SessionLocal
 from ingestion.pandascore_client import PandaScoreClient
-from ingestion.sync import sync_once
+from ingestion.sync import record_sync, sync_once
 
 router = APIRouter(tags=["internal"], include_in_schema=False)
 log = logging.getLogger("ingestion")
@@ -26,8 +27,13 @@ def run_sync() -> None:
         with PandaScoreClient(settings.pandascore_token, settings.pandascore_base_url) as client:
             with SessionLocal() as session:
                 sync_once(session, client)
-    except Exception:
+    except Exception as exc:
         log.exception("scheduled sync failed")
+        try:
+            with SessionLocal() as session:
+                record_sync(session, datetime.now(UTC), error=repr(exc))
+        except Exception:
+            log.exception("could not record the sync failure")
     finally:
         _running.release()
 

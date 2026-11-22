@@ -30,8 +30,11 @@ To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head
 - Everything stays free. Accounts allowed: PandaScore, Supabase (Postgres + pg_cron) and Render (web service).
   Deployment is documented in `docs/deploy.md`; secrets live in Render's environment and Supabase Vault only.
 - PandaScore conventions: Bearer auth, `page[size]` max 100, `sort=field` puts nulls first when ascending
-  (use `scheduled_at`, not `begin_at`), plan limit 1,000 requests per hour, one sync cycle = 3 requests
-  plus at most 1 for rosters (`/teams?filter[id]=`, 100 teams per call, refreshed every 24 h).
+  (use `scheduled_at`, not `begin_at`), plan limit 1,000 requests per hour. One sync cycle is at most 6 requests:
+  running, upcoming (2 pages of 100), past, rosters (`/teams?filter[id]=`, 100 teams, refreshed every 24 h) and
+  stale matches re-checked by id (`/matches?filter[id]=`). Matches older than 30 days are purged.
+- `/health` is Render's liveness check and must always return 200. `/health/sync` reports data freshness
+  (503 when the last success is over 10 minutes old) and is meant for an external uptime monitor.
 - Real payload facts: `match_type` is `best_of` or `first_to` (Overwatch: `number_of_games` = wins needed).
   StarCraft 2 matches are player vs player and are skipped. Per-player stats endpoints return 403 on the free plan.
 - Schema changes go through Alembic: edit `app/models.py`, then `alembic revision --autogenerate -m "..."`,

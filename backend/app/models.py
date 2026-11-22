@@ -51,6 +51,18 @@ class Game(Base):
     length: Mapped[int | None]  # seconds
 
 
+class SyncStatus(Base):
+    """Single row (id=1) describing the last ingestion cycles, read by /health/sync."""
+
+    __tablename__ = "sync_status"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_count: Mapped[int | None]
+    last_error_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(String(500))
+
+
 class Match(Base):
     __tablename__ = "matches"
 

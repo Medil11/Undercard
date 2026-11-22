@@ -10,15 +10,20 @@ import logging
 import time
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import or_, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import SessionLocal
-from app.models import Game, Match, Player, Team
+from app.models import Game, Match, Player, SyncStatus, Team
 from ingestion.pandascore_client import MAX_PAGE_SIZE, STATUSES, PandaScoreClient
 
 log = logging.getLogger("ingestion")
+
+# 100 upcoming matches only cover about a day and a half: take two pages so "Tomorrow" is complete.
+PAGES = {"running": 1, "upcoming": 2, "past": 1}
+STALE_AFTER = timedelta(minutes=30)  # a not_started match this late is re-checked by id
+RETENTION = timedelta(days=30)  # matches older than this are deleted
 
 
 def parse_dt(value: str | None) -> datetime | None:
@@ -137,23 +142,93 @@ def refresh_rosters(
     return len(stale)
 
 
+def delete_match(session: Session, match: Match) -> None:
+    session.execute(delete(Game).where(Game.match_id == match.id))
+    session.delete(match)
+
+
+def refresh_stale(session: Session, client: PandaScoreClient, seen: set[int], now: datetime) -> int:
+    """Re-check matches that left the provider's lists without a final status.
+
+    A postponed, cancelled or deleted match drops out of /running and /upcoming, so without this
+    it would stay "upcoming" forever with a date in the past. One request per call at most.
+    """
+    stale = session.scalars(
+        select(Match)
+        .where(
+            Match.id.not_in(seen),
+            or_(
+                Match.status == "running",
+                and_(Match.status == "not_started", Match.scheduled_at < now - STALE_AFTER),
+            ),
+        )
+        .order_by(Match.scheduled_at)
+        .limit(MAX_PAGE_SIZE)
+    ).all()
+    if not stale:
+        return 0
+    fresh = {p["id"]: p for p in client.matches_by_ids([m.id for m in stale])}
+    removed = 0
+    for match in stale:
+        payload = fresh.get(match.id)
+        if payload is None or not is_team_match(payload):
+            delete_match(session, match)  # gone from the provider: do not keep a ghost
+            removed += 1
+        else:
+            upsert_match(session, payload)
+    session.commit()
+    log.info("re-checked %d stale matches, removed %d", len(stale), removed)
+    return len(stale)
+
+
+def purge_old(session: Session, now: datetime, retention: timedelta = RETENTION) -> int:
+    """Delete matches (and their games) scheduled before the retention window."""
+    old = select(Match.id).where(Match.scheduled_at < now - retention)
+    session.execute(delete(Game).where(Game.match_id.in_(old)))
+    purged = session.execute(delete(Match).where(Match.scheduled_at < now - retention)).rowcount
+    session.commit()
+    if purged:
+        log.info("purged %d matches older than %d days", purged, retention.days)
+    return purged
+
+
+def record_sync(
+    session: Session, now: datetime, count: int | None = None, error: str | None = None
+) -> None:
+    status = session.get(SyncStatus, 1) or SyncStatus(id=1)
+    if error is None:
+        status.last_success_at, status.last_count = now, count
+    else:
+        status.last_error_at, status.last_error = now, error[:500]
+    session.add(status)
+    session.commit()
+
+
 def sync_once(
     session: Session,
     client: PandaScoreClient,
     statuses: tuple[str, ...] = STATUSES,
-    per_page: int = 50,
+    per_page: int = MAX_PAGE_SIZE,
+    now: datetime | None = None,
 ) -> int:
+    now = now or datetime.now(UTC)
     count = skipped = 0
+    seen: set[int] = set()
     for status in statuses:
-        for payload in client.matches(status, per_page=per_page):
-            if not is_team_match(payload):
-                skipped += 1
-                continue
-            upsert_match(session, payload)
-            count += 1
+        for page in range(1, PAGES.get(status, 1) + 1):
+            for payload in client.matches(status, per_page=per_page, page=page):
+                if not is_team_match(payload):
+                    skipped += 1
+                    continue
+                upsert_match(session, payload)
+                seen.add(payload["id"])
+                count += 1
     session.commit()
     log.info("synced %d matches, skipped %d player matches", count, skipped)
-    refresh_rosters(session, client)
+    refresh_stale(session, client, seen, now)
+    refresh_rosters(session, client, now=now)
+    purge_old(session, now)
+    record_sync(session, now, count=count)
     return count
 
 
@@ -171,8 +246,10 @@ def main() -> None:
             try:
                 with SessionLocal() as session:
                     sync_once(session, client)
-            except Exception:
+            except Exception as exc:
                 log.exception("sync failed")
+                with SessionLocal() as session:
+                    record_sync(session, datetime.now(UTC), error=repr(exc))
                 if not args.loop:
                     raise
             if not args.loop:
