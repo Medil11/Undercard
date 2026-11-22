@@ -208,7 +208,10 @@ const GAMES={"league-of-legends":"LoL","cs-go":"CS2","dota-2":"Dota 2","valorant
   "mk1":"Mortal Kombat 1","2xko":"2XKO","fatal-fury":"Fatal Fury"};
 const DAYS=[-1,0,1,2];  // yesterday to the day after tomorrow
 const LOCAL=["localhost","127.0.0.1",""].includes(location.hostname);
-const API=new URLSearchParams(location.search).get("api")||(LOCAL?(location.port==="8000"?location.origin:"http://localhost:8000"):null);
+/* FastAPI serves this page and the API from the same origin (locally and on Render). Only a page opened
+   as a file or from another local dev server needs to point at the local API. ?api= overrides both. */
+const API=new URLSearchParams(location.search).get("api")||
+  (location.protocol==="file:"||(LOCAL&&location.port!=="8000")?"http://localhost:8000":location.origin);
 const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone;
 let LIVE=[],DAY=[],V="live",G="all",demo=true,CUR=null;
 const SEEN=new Map();  // match id -> "s1|s2", to animate newly won games
