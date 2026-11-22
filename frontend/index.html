@@ -103,9 +103,15 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 .av.img.md{background:transparent}
 
 .empty{padding:48px 16px;text-align:center;color:var(--mut)}
-.pick{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 16px}
+.pick{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 16px;overflow:visible}  /* let the suggestions spill out of the card */
 .pick label{font-weight:700}
-.pick input{flex:1;min-width:180px;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;padding:9px 16px;font:inherit}
+.pick-in{position:relative;flex:1;min-width:180px;display:flex}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:4;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden auto;max-height:320px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.sugg:empty{display:none}
+.sugg button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px 14px;text-align:left;font-weight:500}
+.sugg button:hover,.sugg button:focus-visible{background:var(--hover);outline:0}
+.sugg .none{display:block;padding:10px 14px;color:var(--mut)}
+.pick input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;padding:9px 16px;font:inherit}
 .pick input:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 .empty p{margin:0 0 16px;font-size:17px;font-weight:600;color:var(--text)}
 .btn{display:inline-flex;align-items:center;gap:8px;border:0;background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;transition:opacity .15s var(--ease)}
@@ -374,8 +380,8 @@ function renderList(){
 }
 function render(){renderNav();if(CUR)showMatch(CUR,false);else renderList()}
 const PICK=()=>`<form class="card pick" id="pick"><label for="team-q">My team</label>
-  <input id="team-q" list="team-list" value="${esc(TEAM)}" placeholder="Search a team, e.g. Team Liquid" autocomplete="off">
-  <datalist id="team-list"></datalist><button class="btn">Show matches</button></form>`;
+  <span class="pick-in"><input id="team-q" value="${esc(TEAM)}" placeholder="Search a team, e.g. Team Liquid" autocomplete="off" aria-controls="team-sugg">
+  <span class="sugg" id="team-sugg" role="list"></span></span><button class="btn">Show matches</button></form>`;
 document.addEventListener("submit",async e=>{
   if(e.target.id!=="pick")return;
   e.preventDefault();
@@ -384,12 +390,20 @@ document.addEventListener("submit",async e=>{
   await loadDay();render();
 });
 document.addEventListener("input",async e=>{
-  const q=e.target.id==="team-q"?e.target.value.trim():"";
-  if(q.length<2)return;
-  let names;
-  try{names=demo?[...new Set(R.flatMap(m=>[m.team1.name,m.team2.name]))].filter(n=>n.toLowerCase().includes(q.toLowerCase()))
+  if(e.target.id!=="team-q")return;
+  const q=e.target.value.trim(),box=document.getElementById("team-sugg");
+  if(q.length<2){box.innerHTML="";return}
+  let teams;
+  try{teams=demo?[...new Set(R.flatMap(m=>[m.team1.name,m.team2.name]))].filter(n=>n.toLowerCase().includes(q.toLowerCase())).map(name=>({name}))
     :await(await fetch(base()+"/teams?q="+encodeURIComponent(q))).json()}catch{return}
-  document.getElementById("team-list").innerHTML=names.map(n=>`<option value="${esc(n)}">`).join("");
+  if(e.target.value.trim()!==q)return;  // a newer keystroke already asked again
+  box.innerHTML=teams.length?teams.map(t=>`<button type="button" role="listitem" data-team="${esc(t.name)}">${av(t)}<span>${esc(t.name)}</span></button>`).join("")
+    :`<span class="none">No team found</span>`;
+});
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-team]");
+  if(t){document.getElementById("team-q").value=t.dataset.team;document.getElementById("pick").requestSubmit();return}
+  if(!e.target.closest(".pick-in")){const box=document.getElementById("team-sugg");if(box)box.innerHTML=""}  // close on outside click
 });
 
 document.addEventListener("click",async e=>{
@@ -495,7 +509,7 @@ function simulate(){
   if(m[k]+1>=need(m))return;
   m[k]++;render();
 }
-async function refresh(){if(document.activeElement?.id==="team-q")return;try{await loadLive();await loadDay();render()}catch{}}
+async function refresh(){if(document.activeElement?.closest?.("#pick"))return;try{await loadLive();await loadDay();render()}catch{}}
 init();
 </script>
 </body>

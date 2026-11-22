@@ -87,5 +87,7 @@ def test_team_filter_matches_the_name_in_any_game(client, db):
 
 def test_search_teams(client, db):
     seed(db)
-    assert client.get("/teams", params={"q": "alp"}).json() == ["Alpha"]
+    assert client.get("/teams", params={"q": "alp"}).json() == [
+        {"name": "Alpha", "image_url": None}
+    ]
     assert client.get("/teams", params={"q": "a"}).status_code == 422  # two characters minimum

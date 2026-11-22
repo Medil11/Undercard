@@ -73,6 +73,11 @@ class MatchDetailOut(MatchOut):
     stream_url: str | None = None
 
 
+class TeamSuggestion(BaseModel):
+    name: str
+    image_url: str | None = None
+
+
 class VideogameOut(BaseModel):
     slug: str
     matches: int
