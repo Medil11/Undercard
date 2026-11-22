@@ -48,7 +48,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .seg button[aria-selected="true"]{background:var(--ink);color:var(--card)}
 .seg .c{font-weight:500;opacity:.7}
 .seg .dot{width:6px;height:6px;border-radius:50%;background:var(--live)}
-.status{font-size:13px;color:var(--mut);text-align:right}
+.status{text-align:right}
+.mine{border:1px solid var(--line);background:none;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px;transition:background-color .15s var(--ease)}
+.mine:hover{background:var(--hover)}
+.mine[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
 
 /* Layout */
 .shell{max-width:1200px;margin:0 auto;padding:20px;display:grid;grid-template-columns:232px minmax(0,1fr);gap:20px;align-items:start}
@@ -341,8 +344,8 @@ function renderNav(){
   const liveN=LIVE.filter(inGame).length;
   document.getElementById("tabs").innerHTML=
     `<button role="tab" aria-selected="${!CUR&&V==="live"}" data-v="live">${liveN?'<span class="dot" aria-hidden="true"></span>':""}Live<span class="c num">${liveN}</span></button>`+
-    `<button role="tab" aria-selected="${!CUR&&V==="team"}" data-v="team">My team</button>`+
     DAYS.map(o=>`<button role="tab" aria-selected="${!CUR&&V===o}" data-v="${o}">${dayLabel(o)}</button>`).join("");
+  document.getElementById("mode").innerHTML=`<button class="mine" aria-pressed="${!CUR&&V==="team"}" data-v="team">My team</button>`;
   CHIPS=`<div class="chips" role="group" aria-label="Filter by game">${items.map(([s,l,c])=>
     `<button class="chip ${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${esc(l)}<span class="c num">${c}</span></button>`).join("")}</div>`;
 }
@@ -478,7 +481,6 @@ async function init(){
   if(demo)await loadLive();
   V=LIVE.length?"live":0;
   try{await loadDay()}catch{}
-  document.getElementById("mode").textContent=demo?"Demo data":"";
   document.getElementById("foot").innerHTML=(demo?(LOCAL?"Local API not found: run <code>uvicorn app.main:app</code> in the backend folder, then reload. ":"To use your API, add <code>?api=http://localhost:8000</code> to this page address. "):"")+"Times shown in "+esc(TZ)+". Data from PandaScore and start.gg.";
   addEventListener("hashchange",route);
   route();
