@@ -57,8 +57,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .sec a[aria-current="page"]{color:var(--text);border-bottom-color:var(--ink)}
 .sec svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 .gbar{border-top:1px solid var(--line)}
-.gbar-in{padding:0 8px;display:flex;overflow-x:auto;scrollbar-width:none}
-.gbar-in::-webkit-scrollbar{display:none}
+.gbar-in{padding:0 8px;display:flex;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.gbar-in::-webkit-scrollbar{height:6px}
+.gbar-in::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px}
+.gbar-in::-webkit-scrollbar-thumb:hover{background:var(--mut)}
 .gbar button{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;border:0;background:none;padding:12px 12px 9px;font-weight:700;font-size:13px;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap;transition:color .15s var(--ease)}
 .gbar button:hover{color:var(--text)}
 .gbar button[aria-pressed="true"]{color:var(--text);border-bottom-color:var(--ink)}
@@ -243,12 +245,12 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 </div>
 <p class="foot" id="foot"></p>
 <script>
-const GAMES={"league-of-legends":"LoL","cs-go":"CS2","dota-2":"Dota 2","valorant":"Valorant","rl":"Rocket League",
-  "ow":"Overwatch 2","kog":"Honor of Kings","starcraft-2":"StarCraft II","r6-siege":"Rainbow Six","pubg":"PUBG",
-  "mlbb":"Mobile Legends","lol-wild-rift":"Wild Rift","fifa":"EA FC","cod-mw":"Call of Duty","starcraft-brood-war":"StarCraft BW",
-  /* fighting games, from start.gg */
-  "sf6":"Street Fighter 6","tekken-8":"Tekken 8","ssbu":"Smash Ultimate","ssbm":"Smash Melee","ggst":"Guilty Gear Strive",
-  "mk1":"Mortal Kombat 1","2xko":"2XKO","fatal-fury":"Fatal Fury"};
+// Most popular first: this order is the order of the game bar (start.gg fighting games included)
+const GAMES={"league-of-legends":"LoL","cs-go":"CS2","valorant":"Valorant","dota-2":"Dota 2","mlbb":"Mobile Legends",
+  "rl":"Rocket League","ow":"Overwatch 2","cod-mw":"Call of Duty","r6-siege":"Rainbow Six","pubg":"PUBG",
+  "kog":"Honor of Kings","sf6":"Street Fighter 6","tekken-8":"Tekken 8","ssbu":"Smash Ultimate","fifa":"EA FC",
+  "lol-wild-rift":"Wild Rift","starcraft-2":"StarCraft II","ggst":"Guilty Gear Strive","ssbm":"Smash Melee",
+  "mk1":"Mortal Kombat 1","2xko":"2XKO","fatal-fury":"Fatal Fury","starcraft-brood-war":"StarCraft BW"};
 // Official site of each game, for its favicon (Google's favicon service, no key needed)
 const GSITE={"league-of-legends":"leagueoflegends.com","cs-go":"counter-strike.net","dota-2":"dota2.com","valorant":"playvalorant.com",
   "rl":"rocketleague.com","ow":"overwatch.blizzard.com","kog":"honorofkings.com","starcraft-2":"starcraft2.blizzard.com",
@@ -290,6 +292,7 @@ const R=[
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const gname=s=>GAMES[s]||s;
+const rank=s=>{const i=Object.keys(GAMES).indexOf(s);return i<0?999:i};
 const inGame=m=>G==="all"||m.videogame===G;
 const view=()=>V==="live"?LIVE:DAY;
 const dayStart=off=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+off);return d};
@@ -385,7 +388,7 @@ function row(m){
 
 function renderNav(){
   const data=NEWS_ON?(NEWS||[]).map(n=>({videogame:n.game||"other"})):view();
-  const slugs=[...new Set([...Object.keys(GAMES),...data.map(m=>m.videogame)])].sort((a,b)=>gname(a).localeCompare(gname(b),"en"));
+  const slugs=[...new Set([...Object.keys(GAMES),...data.map(m=>m.videogame)])].sort((a,b)=>rank(a)-rank(b));
   const items=[["all","All games"],...slugs.filter(s=>s!=="other").map(s=>[s,gname(s)])].map(([s,l])=>[s,l,data.filter(m=>s==="all"||m.videogame===s).length]);
   document.getElementById("games").innerHTML=items.map(([s,l,c])=>
     `<button class="${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("");
