@@ -1,10 +1,13 @@
-.PHONY: install dev test lint format up down sync lambda-zip
+.PHONY: install dev seed test lint format up down sync lambda-zip
 
 install:
 	cd backend && pip install -e ".[dev]"
 
 dev:
 	cd backend && uvicorn app.main:app --reload
+
+seed:
+	cd backend && python -m ingestion.seed_demo
 
 test:
 	cd backend && pytest -q

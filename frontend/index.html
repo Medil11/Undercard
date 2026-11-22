@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Esport Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f3f1;--surface:#fff;--surface2:#ebebe9;--text:#1b1b1a;--text2:#5a5a56;--muted:#73736f;
+  --line:rgba(27,27,26,.1);--live:#c8102e;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --head:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141413;--surface:#1c1c1b;--surface2:#262625;--text:#efefed;--text2:#adada9;--muted:#8d8d89;
+    --line:rgba(239,239,237,.1);--live:#ff6b72;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141413;--surface:#1c1c1b;--surface2:#262625;--text:#efefed;--text2:#adada9;--muted:#8d8d89;
+  --line:rgba(239,239,237,.1);--live:#ff6b72;color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:400 15px/20px var(--body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:10}
+button{font:inherit;color:inherit}
+.hd{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.hd-in{max-width:1112px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:1fr auto;grid-template-areas:"logo mode" "chips chips" "tabs tabs"}
+.logo{grid-area:logo;padding:12px 0 8px;font:600 24px/28px var(--head)}
+.mode{grid-area:mode;align-self:center;font-size:12px;line-height:16px;color:var(--muted)}
+.chips{grid-area:chips;display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:none;border-radius:8px;padding:4px 12px;cursor:pointer;transition:background-color .12s,color .12s}
+.chip small{margin-left:8px;color:var(--muted);font-size:12px}
+.chip[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:var(--bg)}
+.chip[aria-pressed="true"] small{color:inherit}
+.tabs{grid-area:tabs;display:flex;gap:16px}
+.tab{border:0;background:none;color:var(--muted);font:600 17px/24px var(--head);padding:8px 0 10px;cursor:pointer;border-bottom:2px solid transparent;transition:color .12s}
+.tab em{font:400 13px var(--body);margin-left:8px;font-style:normal}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--text)}
+.tab .dot{display:inline-block;width:6px;height:6px;margin:0 0 3px 8px;border-radius:50%;background:var(--live)}
+:is(.chip,.tab,.nav):focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.shell{max-width:1112px;margin:0 auto;padding:0 16px}
+.side{display:none}
+main{padding:8px 0 32px;max-width:800px}
+.grp{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.gh{display:flex;align-items:baseline;gap:8px;padding:8px 16px;background:var(--surface2);font:600 15px/20px var(--head)}
+.gh .sub{color:var(--text2);font-weight:500}
+.gh .g{margin-left:auto;color:var(--muted);font-weight:500}
+.m{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line);color:inherit;text-decoration:none;transition:background-color 1.2s}
+a.m:hover{background:var(--surface2);transition-duration:.12s}
+a.m:focus-visible{outline:2px solid var(--text);outline-offset:-2px}
+.gh + .m{border-top:0}
+.m.flash{background:var(--surface2);transition:none}
+.st{display:grid;gap:4px;font-size:12px;line-height:16px;color:var(--muted)}
+.st b{font:600 18px/20px var(--head);color:var(--text)}
+.st .lv{color:var(--live);font-weight:600;font-size:13px}
+.st .lv::before{content:"";display:inline-block;width:6px;height:6px;margin:0 6px 1px 0;border-radius:50%;background:var(--live)}
+.teams{display:grid;gap:8px;min-width:0}
+.t{display:flex;align-items:center;gap:8px;min-width:0;height:24px}
+.t .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{position:relative;flex:none;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:var(--surface2);color:var(--text2);font:600 10px var(--head);overflow:hidden}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--surface)}
+.scores{display:grid;gap:8px;justify-items:end}
+.sr{display:flex;align-items:center;gap:8px;height:24px;font:600 20px/24px var(--head);font-variant-numeric:tabular-nums}
+.sr .num{min-width:16px;text-align:right}
+.bo{font:500 13px var(--body);color:var(--muted)}
+.pips{display:flex;gap:4px}
+.pips b{width:8px;height:8px;border-radius:2px;border:1px solid var(--muted);opacity:.6}
+.pips b.f{background:var(--text);border-color:var(--text);opacity:1}
+.run .pips b.f{background:var(--live);border-color:var(--live)}
+.run .num{color:var(--live)}
+.t.lose .n,.sr.lose{color:var(--muted)}
+.t.win .n{font-weight:600}
+.empty{margin:48px 16px;text-align:center;color:var(--muted)}
+.back{display:inline-block;margin-top:16px;padding:4px 0;color:var(--text2);text-decoration:none;font-size:13px}
+.back:hover{color:var(--text)}
+.sb{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:center;padding:24px 16px}
+.sbt{display:grid;justify-items:center;gap:8px;text-align:center;min-width:0}
+.sbt .n{font:600 17px/24px var(--head);overflow-wrap:anywhere}
+.sbt.lose .n{color:var(--muted)}
+.av.lg{width:48px;height:48px;border-radius:8px;font-size:15px}
+.sbs{display:grid;justify-items:center;gap:4px}
+.sbs .sc{display:flex;gap:12px;font:600 36px/40px var(--head);font-variant-numeric:tabular-nums}
+.sbs .sc .lose{color:var(--muted)}
+.run .sbs .sc{color:var(--live)}
+.sbs .meta{font-size:12px;line-height:16px;color:var(--muted)}
+.sbs .lv{color:var(--live);font-weight:600}
+.links{padding:0 16px 16px;text-align:center}
+.links a{display:inline-block;padding:4px 12px;border:1px solid var(--line);border-radius:8px;color:var(--text);text-decoration:none;font-size:13px}
+.links a:hover{background:var(--surface2)}
+.gm{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 16px;border-top:1px solid var(--line);font-size:14px}
+.gh + .gm{border-top:0}
+.gm .pos,.gm .len{color:var(--muted);font-size:13px}
+.gm .len{font-variant-numeric:tabular-nums}
+.gm .run{color:var(--live);font-weight:600}
+.ros{display:grid;grid-template-columns:1fr}
+.ros > div{padding-bottom:12px}
+.ros > div + div{border-top:1px solid var(--line)}
+.ros h3{margin:0;padding:12px 16px 4px;font:600 15px/20px var(--head)}
+.pl{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;padding:4px 16px;min-height:32px}
+.pl .rn{display:block;color:var(--muted);font-size:12px;line-height:16px}
+.pl .nat{color:var(--muted);font-size:12px}
+.note{margin:0;padding:12px 16px;color:var(--muted);font-size:13px;line-height:18px}
+@media (min-width:600px){.ros{grid-template-columns:1fr 1fr}.ros > div + div{border-top:0;border-left:1px solid var(--line)}}
+.foot{max-width:1112px;margin:0 auto;padding:0 16px 32px;color:var(--muted);font-size:12px;line-height:16px}
+.foot code{background:var(--surface2);padding:0 4px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){.m{transition:none}}
+@media (min-width:900px){
+  .hd-in{grid-template-columns:248px minmax(0,1fr) auto;grid-template-areas:"logo tabs mode";column-gap:32px;align-items:end}
+  .chips{display:none}
+  .tabs{align-self:end}
+  .shell{display:grid;grid-template-columns:248px minmax(0,1fr);column-gap:32px;align-items:start}
+  .side{display:block;position:sticky;top:64px;padding:24px 0}
+  .side h2{margin:0 0 8px;font:500 13px/16px var(--body);color:var(--muted)}
+  .nav{display:flex;align-items:center;justify-content:space-between;width:100%;height:36px;margin-bottom:2px;padding:0 12px;border:1px solid transparent;border-radius:8px;background:none;color:var(--text2);cursor:pointer;transition:background-color .12s,color .12s}
+  .nav:hover{background:var(--surface2)}
+  .nav[aria-pressed="true"]{background:var(--surface2);border-color:var(--line);color:var(--text)}
+  .nav small{color:var(--muted);font-size:13px}
+}
+@media (max-width:380px){.m{grid-template-columns:64px minmax(0,1fr) auto;gap:8px;padding:12px}}
+</style>
+</head>
+<body>
+<header class="hd"><div class="hd-in">
+  <div class="logo">Esport Live</div>
+  <span class="mode" id="mode">Données de démo</span>
+  <nav class="chips" id="games" aria-label="Filtrer par jeu"></nav>
+  <div class="tabs" id="tabs" role="tablist"></div>
+</div></header>
+<div class="shell">
+  <aside class="side"><h2>Jeux</h2><nav id="side" aria-label="Filtrer par jeu"></nav></aside>
+  <main id="list" aria-live="polite"></main>
+</div>
+<p class="foot" id="foot"></p>
+<script>
+const GAMES={"league-of-legends":"LoL","cs-go":"CS2","dota-2":"Dota 2","valorant":"Valorant","rl":"Rocket League"};
+const TABS=[["running","En direct"],["not_started","À venir"],["finished","Terminés"]];
+const LOCAL=["localhost","127.0.0.1",""].includes(location.hostname);
+const API=new URLSearchParams(location.search).get("api")||(LOCAL?(location.port==="8000"?location.origin:"http://localhost:8000"):null);
+const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone;
+let DATA=[],G="all",S="running",demo=true;
+
+/* Données de démo, même forme que GET /matches de l’API */
+const R=[
+ ["league-of-legends","Ligue Démo","Playoffs","running",-34,5,"Nova Esports","NOV","Iron Wolves","IRW",1,1],
+ ["league-of-legends","Ligue Démo","Playoffs","not_started",95,3,"Crimson Tide","CRT","Lunar Fox","LNF",null,null],
+ ["league-of-legends","Ligue Démo","Playoffs","finished",-310,3,"Sky Forge","SKF","Pale Owls","PLO",2,0],
+ ["cs-go","Open Series","Phase de groupes","running",-52,3,"Vortex","VTX","Static Void","STV",1,0],
+ ["cs-go","Open Series","Phase de groupes","finished",-200,3,"Red Mirage","RDM","Echo Unit","ECU",2,1],
+ ["cs-go","Open Series","Phase de groupes","not_started",1560,3,"Black Anchor","BLA","Zen Pack","ZNP",null,null],
+ ["dota-2","Coupe Démo","Quarts de finale","running",-70,5,"Titan Root","TTR","Glass Cannon","GLC",0,1],
+ ["dota-2","Coupe Démo","Quarts de finale","not_started",240,3,"Night Relay","NRL","Gold Harbor","GDH",null,null],
+ ["valorant","Masters Démo","Ronde suisse","finished",-120,3,"Ember Squad","EMB","Frost Cell","FRC",2,1],
+ ["valorant","Masters Démo","Ronde suisse","not_started",1440,3,"Pulse Drift","PLD","Neon Pact","NNP",null,null],
+ ["rl","Série Démo","Finale","not_started",150,7,"Apex Orbit","APX","Rift Garage","RFG",null,null]
+].map((r,i)=>{const[vg,lg,tn,st,off,bo,n1,a1,n2,a2,s1,s2]=r;
+ const w=st==="finished"?(s1>s2?i*2+1:i*2+2):null;
+ return{id:i+1,videogame:vg,name:n1+" vs "+n2,status:st,league_name:lg,tournament_name:tn,
+  scheduled_at:new Date(Date.now()+off*6e4).toISOString(),number_of_games:bo,
+  team1:{id:i*2+1,name:n1,acronym:a1},team2:{id:i*2+2,name:n2,acronym:a2},
+  team1_score:s1,team2_score:s2,winner_id:w}});
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const gname=s=>GAMES[s]||s;
+const inGame=m=>G==="all"||m.videogame===G;
+const count=f=>DATA.filter(f).length;
+const av=(t,cls="")=>`<span class="av ${cls}">${esc((t.acronym||t.name).slice(0,3))}${t.image_url?`<img src="${esc(t.image_url)}" alt="" loading="lazy" onerror="this.remove()">`:""}</span>`;
+/* first_to (Overwatch) : number_of_games = manches à gagner ; best_of : longueur de la série */
+const need=m=>m.match_type==="first_to"?(m.number_of_games||1):Math.ceil((m.number_of_games||3)/2);
+const fmt=m=>m.match_type==="first_to"?`FT${m.number_of_games||"?"}`:`BO${m.number_of_games||"?"}`;
+const pips=(m,score)=>{const n=need(m);
+  return`<i class="pips" aria-hidden="true">${Array.from({length:n},(_,i)=>`<b${i<(score||0)?' class="f"':""}></b>`).join("")}</i>`};
+function when(iso){
+  const d=new Date(iso),n=new Date();
+  const diff=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);
+  const day=diff===0?"Auj.":diff===1?"Demain":diff===-1?"Hier":d.toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+  return[day,d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})];
+}
+function eta(iso){
+  const mins=Math.round((new Date(iso)-Date.now())/6e4);
+  if(mins<1)return"imminent";
+  if(mins<60)return`dans ${mins} min`;
+  if(mins<1440)return`dans ${Math.floor(mins/60)} h ${String(mins%60).padStart(2,"0")}`;
+  return null;
+}
+
+function renderNav(){
+  const slugs=[...new Set(DATA.map(m=>m.videogame))];
+  const items=[["all","Tous"],...slugs.map(s=>[s,gname(s)])].map(([s,l])=>[s,l,count(m=>m.status===S&&(s==="all"||m.videogame===s))]);
+  document.getElementById("games").innerHTML=items.map(([s,l,c])=>
+    `<button class="chip" aria-pressed="${G===s}" data-g="${esc(s)}">${esc(l)}<small>${c}</small></button>`).join("");
+  document.getElementById("side").innerHTML=items.map(([s,l,c])=>
+    `<button class="nav" aria-pressed="${G===s}" data-g="${esc(s)}"><span>${esc(l)}</span><small>${c}</small></button>`).join("");
+  document.getElementById("tabs").innerHTML=TABS.map(([k,l])=>{
+    const c=count(m=>m.status===k&&inGame(m));
+    return`<button class="tab" role="tab" aria-selected="${S===k}" data-s="${k}">${l}<em>${c}</em>${k==="running"&&c?'<span class="dot" title="Matchs en cours"></span>':""}</button>`}).join("");
+}
+
+function renderList(flashIds=[]){
+  const ms=DATA.filter(m=>m.status===S&&inGame(m));
+  const el=document.getElementById("list");
+  if(!ms.length){el.innerHTML=`<p class="empty">${S==="running"?"Aucun match en direct, consulte les matchs à venir":"Aucun match pour ce filtre"}</p>`;return}
+  const key=m=>m.videogame+"|"+m.league_name+"|"+m.tournament_name;
+  const sorted=[...ms].sort((a,b)=>S==="finished"?new Date(b.scheduled_at)-new Date(a.scheduled_at):new Date(a.scheduled_at)-new Date(b.scheduled_at));
+  const groups=new Map();
+  sorted.forEach(m=>{if(!groups.has(key(m)))groups.set(key(m),[]);groups.get(key(m)).push(m)});
+  el.innerHTML=[...groups.values()].map(list=>{
+    const f=list[0];
+    return`<section class="grp"><div class="gh">${esc(f.league_name)}<span class="sub">${esc(f.tournament_name)}</span><span class="g">${esc(gname(f.videogame))}</span></div>`+
+    list.map(m=>{
+      const[day,time]=when(m.scheduled_at);
+      const live=m.status==="running",fin=m.status==="finished";
+      const st=live?`<span class="lv">En direct</span><span>Manche ${(m.team1_score||0)+(m.team2_score||0)+1}</span>`
+        :fin?`<b>Terminé</b><span>${day}</span>`:`<b>${time}</b><span>${eta(m.scheduled_at)||day}</span>`;
+      const w1=fin&&m.winner_id===m.team1?.id,w2=fin&&m.winner_id===m.team2?.id;
+      const side=(t,w)=>t?`<div class="t ${fin?(w?"win":"lose"):""}">${av(t)}<span class="n">${esc(t.name)}</span></div>`:`<div class="t"><span class="av">?</span><span class="n">À déterminer</span></div>`;
+      const sc=(v,l,s)=>`<div class="sr ${fin&&l?"lose":""}">${pips(m,s)}<span class="num">${v??0}</span></div>`;
+      const scores=live||fin?sc(m.team1_score,fin&&!w1,m.team1_score)+sc(m.team2_score,fin&&!w2,m.team2_score)
+        :`<span class="bo">${fmt(m)}</span>`;
+      return`<a class="m ${live?"run":""} ${flashIds.includes(m.id)?"flash":""}" href="#/match/${m.id}"><div class="st">${st}</div>
+        <div class="teams">${side(m.team1,w1)}${side(m.team2,w2)}</div><div class="scores">${scores}</div></a>`}).join("")+`</section>`}).join("");
+}
+function render(f){renderNav();if(CUR)showMatch(CUR,false);else renderList(f)}
+
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-g]"),s=e.target.closest("[data-s]");
+  if(g)G=g.dataset.g;
+  if(s)S=s.dataset.s;
+  if(g||s){if(CUR)location.hash="";else render()}
+});
+
+/* Fiche match : #/match/<id> */
+let CUR=null;
+const base=()=>API.replace(/\/$/,"");
+const STATUS={canceled:"Annulé",postponed:"Reporté"};
+const mins=sec=>sec?`${Math.round(sec/60)} min`:"";
+const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:null;
+function route(){
+  const id=+((location.hash.match(/^#\/match\/(\d+)$/)||[])[1]||0);
+  CUR=id||null;
+  renderNav();
+  if(CUR)showMatch(CUR,true);else renderList();
+}
+async function showMatch(id,top){
+  let m=null;
+  if(!demo){try{const r=await fetch(base()+"/matches/"+id);if(r.ok)m=await r.json()}catch{}}
+  m=m||DATA.find(x=>x.id===id);
+  if(CUR!==id)return;  // navigated away while loading
+  document.getElementById("list").innerHTML=m?renderDetail(m)
+    :`<a class="back" href="#">← Tous les matchs</a><p class="empty">Match introuvable</p>`;
+  if(top)window.scrollTo(0,0);
+}
+function renderDetail(m){
+  const live=m.status==="running",fin=m.status==="finished";
+  const w1=fin&&m.winner_id===m.team1?.id,w2=fin&&m.winner_id===m.team2?.id;
+  const[day,time]=m.scheduled_at?when(m.scheduled_at):["",""];
+  const team=(t,w)=>t?`<div class="sbt ${fin&&!w?"lose":""}">${av(t,"lg")}<span class="n">${esc(t.name)}</span></div>`
+    :`<div class="sbt"><span class="av lg">?</span><span class="n">À déterminer</span></div>`;
+  const state=live?`<span class="lv">En direct</span>`:fin?"Terminé":STATUS[m.status]||`${day} · ${time}`;
+  const mid=live||fin
+    ?`<span class="sc"><span class="${fin&&!w1?"lose":""}">${m.team1_score??0}</span><span>–</span><span class="${fin&&!w2?"lose":""}">${m.team2_score??0}</span></span>`
+    :`<span class="sc">${STATUS[m.status]?"–":time}</span>`;
+  const stream=safeUrl(m.stream_url);
+  let html=`<a class="back" href="#">← Tous les matchs</a>
+  <section class="grp ${live?"run":""}"><div class="gh">${esc(m.league_name)}<span class="sub">${esc(m.tournament_name)}</span><span class="g">${esc(gname(m.videogame))}</span></div>
+  <div class="sb">${team(m.team1,w1)}<div class="sbs">${mid}<span class="meta">${state} · ${fmt(m)}</span></div>${team(m.team2,w2)}</div>
+  ${stream?`<div class="links"><a href="${esc(stream)}" target="_blank" rel="noopener noreferrer">Regarder le stream</a></div>`:""}</section>`;
+  if(!m.games)return html+`<section class="grp"><p class="note">Manches et effectifs disponibles avec l’API connectée.</p></section>`;
+  const byId=id=>[m.team1,m.team2].find(t=>t&&t.id===id);
+  if(m.games.length){
+    html+=`<section class="grp"><div class="gh">Manches</div>`+m.games.map(g=>{
+      const w=byId(g.winner_id);
+      const res=w?`<span class="t win">${av(w)}<span class="n">${esc(w.name)}</span></span>`
+        :g.status==="running"?`<span class="run">En cours</span>`:`<span class="pos">${g.status==="finished"?"Terminée":"À jouer"}</span>`;
+      return`<div class="gm"><span class="pos">Manche ${g.position}</span>${res}<span class="len">${mins(g.length)}</span></div>`}).join("")+`</section>`;
+  }
+  const roster=t=>t?`<div><h3>${esc(t.name)}</h3>${(t.players||[]).length?t.players.map(p=>{
+      const real=[p.first_name,p.last_name].filter(Boolean).join(" ");
+      const sub=[real,p.role].filter(Boolean).map(esc).join(" · ");
+      return`<div class="pl">${av({name:p.name,image_url:p.image_url})}<span><span class="n">${esc(p.name)}</span>${sub?`<span class="rn">${sub}</span>`:""}</span><span class="nat">${esc(p.nationality)}</span></div>`}).join("")
+    :`<p class="note">Effectif pas encore synchronisé.</p>`}</div>`:"";
+  if(m.team1||m.team2)html+=`<section class="grp"><div class="gh">Effectifs<span class="sub">effectif actuel, pas forcément l’alignement du match</span></div><div class="ros">${roster(m.team1)}${roster(m.team2)}</div></section>`;
+  return html;
+}
+
+async function load(){const r=await fetch(base()+"/matches?limit=200");if(!r.ok)throw 0;return r.json()}
+async function init(){
+  if(API){try{DATA=await load();demo=false}catch{DATA=R}}else DATA=R;
+  if(!DATA.some(m=>m.status==="running"))S="not_started";
+  document.getElementById("mode").textContent=demo?"Données de démo":"API connectée";
+  document.getElementById("foot").innerHTML=(demo?(LOCAL?"API locale introuvable : lance <code>uvicorn app.main:app</code> dans le dossier backend, puis recharge la page. ":"Pour utiliser ton API, ajoute <code>?api=http://localhost:8000</code> à l’adresse de la page. "):"")+"Heures affichées en "+esc(TZ);
+  addEventListener("hashchange",route);
+  route();
+  setInterval(demo?simulate:refresh,demo?7000:30000);
+}
+/* Démo : fait avancer les scores des matchs en direct */
+function simulate(){
+  const live=DATA.filter(m=>m.status==="running");
+  const m=live[Math.floor(Math.random()*live.length)];
+  if(!m)return;
+  const k=Math.random()<.5?"team1_score":"team2_score";
+  if(m[k]+1>=need(m))return;
+  m[k]++;render([m.id]);
+}
+async function refresh(){try{DATA=await load();render()}catch{}}
+init();
+</script>
+</body>
+</html>
