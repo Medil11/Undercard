@@ -14,7 +14,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal
 from app.models import Game, Match, Player, Team
 from ingestion.pandascore_client import MAX_PAGE_SIZE, STATUSES, PandaScoreClient
 
@@ -165,7 +165,6 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     settings = get_settings()
-    Base.metadata.create_all(engine)
 
     with PandaScoreClient(settings.pandascore_token, settings.pandascore_base_url) as client:
         while True:

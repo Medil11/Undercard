@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal, engine
 from ingestion.sync import upsert_match
 
 ID_OFFSET = 9_000_000  # keeps demo ids away from real provider ids
@@ -214,7 +214,6 @@ def seed(session: Session) -> int:
 
 
 def main() -> None:
-    Base.metadata.create_all(engine)
     with SessionLocal() as session:
         count = seed(session)
     print(f"{count} demo matches written to {engine.url}")

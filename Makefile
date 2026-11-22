@@ -1,7 +1,10 @@
-.PHONY: install dev seed test lint format up down sync lambda-zip
+.PHONY: install migrate dev seed test lint format up down sync lambda-zip
 
 install:
 	cd backend && pip install -e ".[dev]"
+
+migrate:
+	cd backend && alembic upgrade head
 
 dev:
 	cd backend && uvicorn app.main:app --reload

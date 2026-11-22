@@ -11,8 +11,17 @@ class Base(DeclarativeBase):
 
 
 def make_engine(url: str) -> Engine:
-    args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    return create_engine(url, connect_args=args, pool_pre_ping=True)
+    if url.startswith("sqlite"):
+        return create_engine(url, connect_args={"check_same_thread": False})
+    # Postgres (local Docker or Supabase). A small pool: free Supabase projects cap connections.
+    # prepare_threshold=None keeps psycopg compatible with Supabase's transaction pooler too.
+    return create_engine(
+        url,
+        pool_pre_ping=True,
+        pool_size=3,
+        max_overflow=2,
+        connect_args={"prepare_threshold": None},
+    )
 
 
 engine = make_engine(get_settings().database_url)
