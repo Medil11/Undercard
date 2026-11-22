@@ -308,10 +308,10 @@ function label(m){
   return`${a} versus ${b}, ${STATUS[m.status]||day+" "+time}, ${fmt(m)}`;
 }
 function statusCell(m){
-  const[day,time]=when(m.scheduled_at);
-  if(m.status==="running")return`<span class="lv">Live</span><span>Game ${(m.team1_score||0)+(m.team2_score||0)+1}</span>`;
+  const[day,time]=when(m.scheduled_at),start=when(m.begin_at||m.scheduled_at)[1];
+  if(m.status==="running")return`<span class="lv">Live</span><span>Game ${(m.team1_score||0)+(m.team2_score||0)+1}</span><span class="num">${start}</span>`;
   const d=V==="live"?day:"";  // a day tab already says which day it is
-  if(m.status==="finished")return`<b>Final</b><span>${d}</span>`;
+  if(m.status==="finished")return`<b>Final</b><span class="num">${start}</span>`;
   if(STATUS[m.status])return`<b>${STATUS[m.status]}</b><span>${d}</span>`;
   return`<b class="num">${time}</b><span>${eta(m.scheduled_at)||d}</span>`;
 }
@@ -392,7 +392,7 @@ function renderDetail(m){
   const live=m.status==="running",fin=m.status==="finished",scored=live||fin;
   const w1=fin&&m.winner_id===m.team1?.id,w2=fin&&m.winner_id===m.team2?.id;
   const[f1,f2]=freshness(m);
-  const[day,time]=when(m.scheduled_at);
+  const[day,time]=when(m.scheduled_at),started=when(m.begin_at||m.scheduled_at);
   const stream=safeUrl(m.stream_url);
   const team=(t,lose,score,fresh)=>t
     ?`<div class="side-t ${lose?"lo":""}">${av(t)}<span class="nm">${esc(t.name)}</span><span class="big-dots" aria-hidden="true">${dots(m,scored?score:0,fresh)}</span></div>`
@@ -401,7 +401,7 @@ function renderDetail(m){
     ?`<span class="score num"><span class="${fin&&!w1?"lo":""}">${m.team1_score??0}</span> – <span class="${fin&&!w2?"lo":""}">${m.team2_score??0}</span></span>${live?`<span class="pill lv">Live, game ${(m.team1_score||0)+(m.team2_score||0)+1}</span>`:`<span class="pill">Final</span>`}`
     :`<span class="score num">${STATUS[m.status]?"–":time}</span><span class="pill">${STATUS[m.status]||eta(m.scheduled_at)||day}</span>`;
   let html=`${BACK}<section class="card"><div class="th"><span class="lg">${esc(m.league_name)}${m.tournament_name?`<span>${esc(m.tournament_name)}</span>`:""}</span><span class="rt"><span>${esc(gname(m.videogame))}</span></span></div>
-  <div class="hero">${team(m.team1,fin&&!w1,m.team1_score,f1)}<div class="mid">${center}<span class="fmt">${fmt(m)}</span>${stream?`<a class="btn" href="${esc(stream)}" target="_blank" rel="noopener noreferrer">Watch stream${ICON.out}</a>`:""}</div>${team(m.team2,fin&&!w2,m.team2_score,f2)}</div></section>`;
+  <div class="hero">${team(m.team1,fin&&!w1,m.team1_score,f1)}<div class="mid">${center}<span class="fmt">${fmt(m)}${scored?`, started ${started[0]==="Today"?"":started[0]+" "}${started[1]}`:""}</span>${stream?`<a class="btn" href="${esc(stream)}" target="_blank" rel="noopener noreferrer">Watch stream${ICON.out}</a>`:""}</div>${team(m.team2,fin&&!w2,m.team2_score,f2)}</div></section>`;
   if(!m.games)return html+`<p class="foot" style="padding:0">Games and rosters appear when the API is connected.</p>`;
   const maxGames=m.match_type==="first_to"?2*(m.number_of_games||1)-1:(m.number_of_games||m.games.length);
   const games=m.games.filter(g=>g.position<=maxGames&&!(fin&&g.status==="not_started"));
