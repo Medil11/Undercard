@@ -91,3 +91,40 @@ def test_search_teams(client, db):
         {"name": "Alpha", "image_url": None}
     ]
     assert client.get("/teams", params={"q": "a"}).status_code == 422  # two characters minimum
+
+
+def test_match_has_league_tournament_and_serie_details(client, db):
+    seed(db)
+    m = client.get("/matches/1001").json()
+    assert m["league_image_url"] == "https://example.com/league.png"
+    assert (m["prizepool"], m["region"], m["country"]) == (
+        "50000 United States Dollar",
+        "WEU",
+        "FR",
+    )
+    assert (m["serie_name"], m["season"], m["year"]) == ("Spring 2026", "Spring", 2026)
+
+
+def test_standings_are_fetched_once_then_cached(client, db, monkeypatch):
+    from app.routers import matches
+
+    seed(db)
+    calls = []
+    row = {
+        "rank": 1,
+        "team": {"id": 11, "name": "Alpha"},
+        "last_match": {"id": 1001, "name": "Final", "status": "finished", "winner_id": 11},
+    }
+
+    def fake(self, tournament_id):
+        calls.append(tournament_id)
+        return [row]
+
+    monkeypatch.setattr(matches.PandaScoreClient, "standings", fake)
+    monkeypatch.setattr(matches, "_standings", {})
+    first = client.get("/matches/1001/standings").json()
+    assert first[0]["rank"] == 1 and first[0]["team"]["name"] == "Alpha"
+    client.get("/matches/1001/standings")
+    assert calls == [77]  # second call served from the cache
+    assert client.get("/matches/1002/standings").json() == []  # no tournament id
+    assert client.get("/matches/999/standings").status_code == 404

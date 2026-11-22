@@ -38,13 +38,24 @@ def parse_match(payload: dict) -> tuple[dict, list[dict]]:
     team1 = opponents[0] if len(opponents) > 0 else None
     team2 = opponents[1] if len(opponents) > 1 else None
 
+    league = payload.get("league") or {}
+    tournament = payload.get("tournament") or {}
+    serie = payload.get("serie") or {}
     match = {
         "id": payload["id"],
         "videogame": (payload.get("videogame") or {}).get("slug", "unknown"),
         "name": payload.get("name") or "TBD",
         "status": payload["status"],
-        "league_name": (payload.get("league") or {}).get("name"),
-        "tournament_name": (payload.get("tournament") or {}).get("name"),
+        "league_name": league.get("name"),
+        "tournament_name": tournament.get("name"),
+        "league_image_url": league.get("image_url"),
+        "tournament_id": tournament.get("id"),
+        "prizepool": tournament.get("prizepool"),
+        "region": tournament.get("region"),
+        "country": tournament.get("country"),
+        "serie_name": serie.get("full_name"),
+        "season": str(serie["season"]) if serie.get("season") is not None else None,
+        "year": serie.get("year"),
         "scheduled_at": parse_dt(payload.get("scheduled_at")),
         "begin_at": parse_dt(payload.get("begin_at")),
         "end_at": parse_dt(payload.get("end_at")),

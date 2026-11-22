@@ -74,6 +74,22 @@ main{display:grid;gap:16px;min-width:0}
 .th{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px 10px}
 .th .lg{font-weight:700;font-size:14px;min-width:0}
 .th .lg span{font-weight:500;color:var(--mut);margin-left:6px}
+.lgi{width:18px;height:18px;object-fit:contain;vertical-align:-4px;margin-right:8px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0;padding:0 16px 16px}
+.facts dt{font-size:13px;color:var(--mut)}
+.facts dd{margin:2px 0 0;font-weight:600}
+.stand{width:100%;border-collapse:collapse;font-size:14px}
+.stand th{text-align:left;font-size:13px;font-weight:500;color:var(--mut);padding:0 16px 8px}
+.stand td{padding:8px 16px;border-top:1px solid var(--line);vertical-align:middle}
+.stand td:first-child,.stand th:first-child{width:32px;text-align:center}
+.stand tr.me td{background:var(--bg);font-weight:700}
+.stand .tm{display:flex;align-items:center;gap:10px}
+.stand .tm .av{width:24px;height:24px;font-size:9px}
+.stand a{color:inherit;text-decoration:none}
+.stand a:hover{text-decoration:underline}
+.res{display:inline-block;width:20px;margin-right:8px;text-align:center;border-radius:6px;font-size:12px}
+.res.W{background:var(--ink);color:var(--card)}
+.res.L{color:var(--mut)}
 .th .rt{display:flex;gap:12px;flex:none;font-size:13px;color:var(--mut)}
 .row{display:grid;grid-template-columns:64px minmax(0,1fr) auto 28px;column-gap:16px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);text-decoration:none;transition:background-color .15s var(--ease)}
 a.row:hover{background:var(--hover)}
@@ -230,6 +246,7 @@ const GSITE={"league-of-legends":"leagueoflegends.com","cs-go":"counter-strike.n
   "tekken-8":"tekken.com","ssbu":"smashbros.com","ssbm":"smashbros.com","ggst":"guiltygear.com","mk1":"mortalkombat.com",
   "2xko":"2xko.riotgames.com","fatal-fury":"snk-corp.co.jp"};
 const gico=s=>GSITE[s]?`<img class="gi" src="https://www.google.com/s2/favicons?sz=64&domain=${GSITE[s]}" alt="" loading="lazy" onerror="this.remove()">`:"";
+const lgi=m=>{const u=safeUrl(m.league_image_url);return u?`<img class="lgi" src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">`:""};
 const DAYS=[-1,0,1,2];  // yesterday to the day after tomorrow
 const LOCAL=["localhost","127.0.0.1",""].includes(location.hostname);
 /* FastAPI serves this page and the API from the same origin (locally and on Render). Only a page opened
@@ -387,7 +404,7 @@ function renderList(){
   sorted.forEach(m=>{if(!groups.has(key(m)))groups.set(key(m),[]);groups.get(key(m)).push(m)});
   el.innerHTML=top+[...groups.values()].map(list=>{
     const f=list[0],same=list.every(m=>fmt(m)===fmt(f));
-    return`<section class="card" aria-label="${esc(f.league_name)}"><div class="th"><span class="lg">${esc(f.league_name)}${f.tournament_name?`<span>${esc(f.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(f.videogame)}${esc(gname(f.videogame))}</span>${same?`<span>${fmt(f)}</span>`:""}</span></div>`+
+    return`<section class="card" aria-label="${esc(f.league_name)}"><div class="th"><span class="lg">${lgi(f)}${esc(f.league_name)}${f.tournament_name?`<span>${esc(f.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(f.videogame)}${esc(gname(f.videogame))}</span>${same?`<span>${fmt(f)}</span>`:""}</span></div>`+
       list.map(row).join("")+`</section>`}).join("");
 }
 function render(){renderNav();if(CUR)showMatch(CUR,false);else renderList()}
@@ -442,6 +459,14 @@ async function showMatch(id,top){
   document.getElementById("list").innerHTML=m?renderDetail(m):`${BACK}<div class="card empty"><p>Match not found</p></div>`;
   document.title=m?`${m.team1?.name||"TBD"} vs ${m.team2?.name||"TBD"} · Undercard`:"Undercard";
   if(top)window.scrollTo(0,0);
+  if(demo||!m||m.source==="startgg")return;
+  let rows=[];
+  try{const r=await fetch(base()+"/matches/"+id+"/standings");if(r.ok)rows=await r.json()}catch{}
+  if(CUR!==id||!rows.length)return;
+  const mine=new Set([m.team1?.id,m.team2?.id]);
+  document.getElementById("list").insertAdjacentHTML("beforeend",`<section class="card"><div class="sec-h"><h2>Standings</h2></div><table class="stand"><thead><tr><th>#</th><th>Team</th><th>Last match</th></tr></thead><tbody>${rows.map(r=>{
+    const lm=r.last_match,res=lm?.winner_id?(lm.winner_id===r.team.id?"W":"L"):"";
+    return`<tr class="${mine.has(r.team.id)?"me":""}"><td class="num">${r.rank}</td><td><span class="tm">${av(r.team)}${esc(r.team.name)}</span></td><td>${lm?`${res?`<b class="res ${res}">${res}</b>`:""}<a href="#/match/${lm.id}">${esc(lm.name)}</a>`:""}</td></tr>`}).join("")}</tbody></table></section>`);
 }
 function renderDetail(m){
   const live=m.status==="running",fin=m.status==="finished",scored=live||fin;
@@ -455,8 +480,11 @@ function renderDetail(m){
   const center=scored
     ?`<span class="score num"><span class="${fin&&!w1?"lo":""}">${m.team1_score??0}</span> – <span class="${fin&&!w2?"lo":""}">${m.team2_score??0}</span></span>${live?`<span class="pill lv">Live, game ${(m.team1_score||0)+(m.team2_score||0)+1}</span>`:`<span class="pill">Final</span>`}`
     :`<span class="score num">${STATUS[m.status]?"–":time}</span><span class="pill">${STATUS[m.status]||eta(m.scheduled_at)||day}</span>`;
-  let html=`${BACK}<section class="card"><div class="th"><span class="lg">${esc(m.league_name)}${m.tournament_name?`<span>${esc(m.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(m.videogame)}${esc(gname(m.videogame))}</span></span></div>
+  let html=`${BACK}<section class="card"><div class="th"><span class="lg">${lgi(m)}${esc(m.league_name)}${m.tournament_name?`<span>${esc(m.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(m.videogame)}${esc(gname(m.videogame))}</span></span></div>
   <div class="hero">${team(m.team1,fin&&!w1,m.team1_score,f1)}<div class="mid">${center}<span class="fmt">${fmt(m)}${scored?`, started ${started[0]==="Today"?"":started[0]+" "}${started[1]}`:""}</span>${stream?`<a class="btn" href="${esc(stream)}" target="_blank" rel="noopener noreferrer">Watch stream${ICON.out}</a>`:""}</div>${team(m.team2,fin&&!w2,m.team2_score,f2)}</div></section>`;
+  const prize=m.prizepool&&m.prizepool.replace(/^\d+/,n=>(+n).toLocaleString("en"));
+  const facts=[["Season",m.serie_name],["Prize pool",prize],["Region",[m.region,m.country].filter(Boolean).join(", ")]].filter(([,v])=>v);
+  if(facts.length)html+=`<section class="card"><div class="sec-h"><h2>Tournament</h2></div><dl class="facts">${facts.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`;
   if(!m.games)return html+`<p class="foot" style="padding:0">Games and rosters appear when the API is connected.</p>`;
   const maxGames=m.match_type==="first_to"?2*(m.number_of_games||1)-1:(m.number_of_games||m.games.length);
   const games=m.games.filter(g=>g.position<=maxGames&&!(fin&&g.status==="not_started"));

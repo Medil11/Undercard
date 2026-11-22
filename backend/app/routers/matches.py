@@ -1,14 +1,22 @@
+import logging
+import time
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.config import get_settings
 from app.db import get_db
 from app.models import Match, Team
-from app.schemas import MatchDetailOut, MatchOut, TeamSuggestion, VideogameOut
+from app.schemas import MatchDetailOut, MatchOut, StandingOut, TeamSuggestion, VideogameOut
+from ingestion.pandascore_client import PandaScoreClient
 
 router = APIRouter(tags=["matches"])
+log = logging.getLogger("api")
+STANDINGS_TTL = 600  # seconds; fetched on demand, so each tournament costs at most 6 requests/hour
+# shortcut: per-process cache, fine for one Render instance; move to the database if it scales out
+_standings: dict[int, tuple[float, list[dict]]] = {}
 
 
 @router.get("/matches", response_model=list[MatchOut])
@@ -52,6 +60,28 @@ def get_match(match_id: int, db: Session = Depends(get_db)) -> Match:
     if match is None:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
+
+
+@router.get("/matches/{match_id}/standings", response_model=list[StandingOut])
+def get_standings(match_id: int, db: Session = Depends(get_db)) -> list[dict]:
+    """Standings of the match's tournament, fetched from PandaScore and cached for 10 minutes."""
+    match = db.get(Match, match_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Match not found")
+    if match.source != "pandascore" or match.tournament_id is None:
+        return []
+    cached = _standings.get(match.tournament_id)
+    if cached and time.monotonic() - cached[0] < STANDINGS_TTL:
+        return cached[1]
+    settings = get_settings()
+    try:
+        with PandaScoreClient(settings.pandascore_token, settings.pandascore_base_url) as client:
+            rows = client.standings(match.tournament_id)
+    except Exception:
+        log.exception("standings fetch failed for tournament %s", match.tournament_id)
+        return cached[1] if cached else []  # stale beats empty
+    _standings[match.tournament_id] = (time.monotonic(), rows)
+    return rows
 
 
 @router.get("/teams", response_model=list[TeamSuggestion])

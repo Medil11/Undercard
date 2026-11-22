@@ -80,6 +80,16 @@ class Match(Base):
     status: Mapped[str] = mapped_column(String(20), index=True)
     league_name: Mapped[str | None] = mapped_column(String(200))
     tournament_name: Mapped[str | None] = mapped_column(String(200))
+    league_image_url: Mapped[str | None] = mapped_column(String(500))
+    tournament_id: Mapped[int | None]  # PandaScore id, used to fetch the standings
+    prizepool: Mapped[str | None] = mapped_column(
+        String(200)
+    )  # free text, e.g. "50000 United States Dollar"
+    region: Mapped[str | None] = mapped_column(String(50))
+    country: Mapped[str | None] = mapped_column(String(50))
+    serie_name: Mapped[str | None] = mapped_column(String(200))  # serie.full_name
+    season: Mapped[str | None] = mapped_column(String(50))
+    year: Mapped[int | None]
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     begin_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

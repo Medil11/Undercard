@@ -9,8 +9,15 @@ FINISHED_MATCH = {
     "match_type": "best_of",
     "winner_id": 11,
     "videogame": {"slug": "league-of-legends"},
-    "league": {"name": "Demo League"},
-    "tournament": {"name": "Playoffs"},
+    "league": {"name": "Demo League", "image_url": "https://example.com/league.png"},
+    "tournament": {
+        "id": 77,
+        "name": "Playoffs",
+        "prizepool": "50000 United States Dollar",
+        "region": "WEU",
+        "country": "FR",
+    },
+    "serie": {"full_name": "Spring 2026", "season": "Spring", "year": 2026},
     "opponents": [
         {"opponent": {"id": 11, "name": "Alpha", "acronym": "ALP", "image_url": None}},
         {"opponent": {"id": 12, "name": "Beta", "acronym": "BET", "image_url": None}},

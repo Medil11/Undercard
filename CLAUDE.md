@@ -34,6 +34,8 @@ To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head
   (use `scheduled_at`, not `begin_at`), plan limit 1,000 requests per hour. One sync cycle is at most 6 requests:
   running, upcoming (2 pages of 100), past, rosters (`/teams?filter[id]=`, 100 teams, refreshed every 24 h) and
   stale matches re-checked by id (`/matches?filter[id]=`). Matches older than 30 days are purged.
+  Tournament standings are not synced: `GET /matches/{id}/standings` fetches them on demand and caches them
+  10 minutes per tournament (in memory).
 - `/health` is Render's liveness check and must always return 200. `/health/sync` reports data freshness
   (503 when the last success is over 10 minutes old) and is meant for an external uptime monitor.
 - start.gg (`ingestion/startgg.py`, optional, `STARTGG_TOKEN`): ids are stored negated and rows carry

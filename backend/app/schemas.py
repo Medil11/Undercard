@@ -22,6 +22,13 @@ class MatchOut(BaseModel):
     status: str
     league_name: str | None = None
     tournament_name: str | None = None
+    league_image_url: str | None = None
+    prizepool: str | None = None
+    region: str | None = None
+    country: str | None = None
+    serie_name: str | None = None
+    season: str | None = None
+    year: int | None = None
     scheduled_at: datetime | None = None
     begin_at: datetime | None = None
     end_at: datetime | None = None
@@ -71,6 +78,19 @@ class MatchDetailOut(MatchOut):
     team2: TeamDetailOut | None = None
     games: list[GameOut] = []
     stream_url: str | None = None
+
+
+class StandingMatch(BaseModel):
+    id: int
+    name: str
+    status: str
+    winner_id: int | None = None
+
+
+class StandingOut(BaseModel):
+    rank: int
+    team: TeamOut
+    last_match: StandingMatch | None = None
 
 
 class TeamSuggestion(BaseModel):

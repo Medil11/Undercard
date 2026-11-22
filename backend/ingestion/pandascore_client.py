@@ -56,6 +56,12 @@ class PandaScoreClient:
         response.raise_for_status()
         return response.json()
 
+    def standings(self, tournament_id: int) -> list[dict]:
+        """Rank, team and last match of every team in a tournament."""
+        response = self._http.get(f"/tournaments/{tournament_id}/standings")
+        response.raise_for_status()
+        return response.json()
+
     def close(self) -> None:
         self._http.close()
 
