@@ -1,4 +1,4 @@
-# Esport Live
+# Undercard (formerly Esport Live)
 
 FlashScore-style live scores for esports. Personal portfolio project of a data/software engineer.
 Reply to the user in French. Keep code, comments and docs in English.
@@ -36,13 +36,19 @@ Delete `backend/esport_live.db` to reset the local data.
 - Run lint and tests before every commit. Conventional commits, small changes.
 - Do not invent API fields: check the real payload before relying on a field.
 
-## UI direction (already decided, keep it)
+## UI direction (SofaScore-like, decided 2026-11-22)
 
-- Neutral graphite surfaces, red used only for live status. 4px spacing grid, weights 400 to 600.
-- No gradients, glows, emoji or looping animation. One easing, small transitions.
-- Signature detail: series pips (one square per map to win in a BO3 or BO5), only on live and finished rows.
-- Team logos come from the API `image_url`, with a neutral initials fallback.
-- Reference for density and structure: Liquipedia (Upcoming / Completed tabs, explicit BO format).
+- Product context lives in `PRODUCT.md`. `DESIGN.md` and the impeccable surface brief still describe the previous
+  "Fight Night Billing" style and must be refreshed (`/impeccable document`) before relying on them.
+- UI copy is in English, sentence case (no all-caps labels).
+- Clean and rounded: light theme by default (#eef1f5 ground, white cards), dark theme via prefers-color-scheme.
+  Cards 16px radius, logos 8px, pills and buttons fully rounded. No gradients, glows, emoji or looping animation.
+- Archivo only (self-hosted in `frontend/fonts`); Anton is kept for the logo wordmark only. Yellow is in the logo only.
+- Red is reserved for live status. Series state is shown as dots (one per game to win, red for the game in play).
+- Match page: teams face each other around a centred score; each game is a rounded bar toward its winner,
+  its length the game duration (a single dot when durations are missing).
+- Team logos come from the API `image_url`; a canvas luminance check puts only very dark or very light marks on a
+  contrasting tile, with an initials fallback.
 
 ## Next steps
 

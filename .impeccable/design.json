@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-22T00:00:00Z",
+  "title": "Design System: Undercard",
+  "extensions": {
+    "colorMeta": {
+      "poster-yellow": { "role": "primary", "displayName": "Poster Yellow", "canonical": "#ffd400", "tonalRamp": ["#2a2300", "#4d4300", "#7a6a00", "#a89200", "#d4b800", "#ffd400", "#ffe04d", "#fff0a6"] },
+      "poster-yellow-hover": { "role": "primary", "displayName": "Poster Yellow Hover", "canonical": "#ffe04d", "tonalRamp": ["#2a2300", "#4d4300", "#7a6a00", "#a89200", "#d4b800", "#ffd400", "#ffe04d", "#fff0a6"] },
+      "yellow-ink": { "role": "primary", "displayName": "Yellow Ink", "canonical": "#4d4300", "tonalRamp": ["#2a2300", "#4d4300", "#7a6a00", "#a89200", "#d4b800", "#ffd400", "#ffe04d", "#fff0a6"] },
+      "in-play-red": { "role": "secondary", "displayName": "In-Play Red", "canonical": "#ff3326", "tonalRamp": ["#3a0a07", "#66130e", "#991d15", "#cc281e", "#ff3326", "#ff6a60", "#ff9e98", "#ffd1ce"] },
+      "ground-black": { "role": "neutral", "displayName": "Ground Black", "canonical": "#0c0c0c", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "hover-black": { "role": "neutral", "displayName": "Hover Black", "canonical": "#171715", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "empty-slot": { "role": "neutral", "displayName": "Empty Slot", "canonical": "#262624", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "rule-line": { "role": "neutral", "displayName": "Rule Line", "canonical": "#242422", "tonalRamp": ["#0c0c0c", "#171715", "#242422", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "poster-white": { "role": "neutral", "displayName": "Poster White", "canonical": "#f5f5f0", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "muted-ash": { "role": "neutral", "displayName": "Muted Ash", "canonical": "#b3b3ad", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "dim-ash": { "role": "neutral", "displayName": "Dim Ash", "canonical": "#8a8a84", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "logo-plate": { "role": "neutral", "displayName": "Logo Plate", "canonical": "#55554f", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#d6d6d0", "#f5f5f0"] },
+      "light-plate": { "role": "neutral", "displayName": "Light Plate", "canonical": "#e4e4de", "tonalRamp": ["#0c0c0c", "#171715", "#262624", "#55554f", "#8a8a84", "#b3b3ad", "#e4e4de", "#f5f5f0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Series score on the match page poster; 52px/48px under 700px." },
+      "headline": { "displayName": "Headline", "purpose": "Team names on the match page poster, up to three lines; 34px/32px under 700px." },
+      "score": { "displayName": "Score", "purpose": "Score or start time on a billing row's axis; 24px/26px under 700px. Logo uses 32px/32px." },
+      "title": { "displayName": "Title", "purpose": "Team names on billing rows and empty-state messages; 19px/21px under 700px." },
+      "subtitle": { "displayName": "Subtitle", "purpose": "Roster team headings." },
+      "body": { "displayName": "Body", "purpose": "Default running text." },
+      "body-strong": { "displayName": "Body Strong", "purpose": "Player handles in rosters." },
+      "note": { "displayName": "Note", "purpose": "Data caveats, real names, footer." },
+      "label": { "displayName": "Label", "purpose": "Tabs, chips, event headers, axis status, section headings, durations, nationality, buttons. Counts drop to weight 500, zero tracking." }
+    },
+    "shadows": [
+      { "name": "tab-underline", "value": "inset 0 -4px 0 #f5f5f0", "purpose": "Active tab underline. A rule drawn with box-shadow, not elevation; the system has no depth shadows." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(.16,1,.3,1)", "purpose": "The only easing; state transitions and the tape wipe." },
+      { "name": "state", "value": "150ms", "purpose": "Colour and background transitions on tabs, rows, back link." },
+      { "name": "tape-wipe", "value": "420ms clip-path inset, outward from the axis", "purpose": "A newly won tape block fills from the centre outward. Never loops; removed under prefers-reduced-motion." }
+    ],
+    "logoTone": { "sample": "24x24 canvas", "metric": "mean relative luminance of pixels with alpha >= 128", "threshold": 0.45, "darkMark": "light-plate", "lightMark": "empty-slot", "pending": "logo-plate", "failure": "initials on empty-slot" },
+    "breakpoints": [
+      { "name": "header-wrap", "value": "899px" },
+      { "name": "phone", "value": "699px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Billing Row",
+      "kind": "custom",
+      "refersTo": "billing-row",
+      "description": "The signature unit: two teams mirrored across a fixed VS axis, tapes growing outward. Shown live at 1-1 in a best of five, game 3 in play.",
+      "html": "<a class=\"ds-bill\" href=\"#\"><span class=\"ds-tm ds-l\"><span>Nova Esports</span><span class=\"ds-av\">NOV</span></span><span class=\"ds-tape ds-tl\"><b class=\"ds-f\"></b><b class=\"ds-lv\"></b><b></b></span><span class=\"ds-ax\"><strong>1–1</strong><span class=\"ds-lbl ds-red\">Live · G3</span></span><span class=\"ds-tape\"><b class=\"ds-f\"></b><b class=\"ds-lv\"></b><b></b></span><span class=\"ds-tm\"><span class=\"ds-av\">IRW</span><span>Iron Wolves</span></span></a>",
+      "css": ".ds-bill{display:grid;grid-template-columns:minmax(0,1fr) auto 120px auto minmax(0,1fr);align-items:center;min-height:76px;border-bottom:1px solid #242422;background:#0c0c0c;color:#f5f5f0;text-decoration:none;transition:background-color .15s cubic-bezier(.16,1,.3,1)} .ds-bill:hover{background:#171715} .ds-bill:focus-visible{outline:2px solid #ffd400;outline-offset:-2px} .ds-tm{display:flex;align-items:center;gap:14px;font:400 28px/32px Anton,Impact,'Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:.01em} .ds-tm.ds-l{justify-content:flex-end;text-align:right} .ds-av{width:32px;height:32px;display:grid;place-items:center;background:#262624;color:#b3b3ad;font:700 11px Archivo,system-ui,sans-serif;letter-spacing:.02em} .ds-tape{display:flex;gap:4px;padding:0 16px} .ds-tape.ds-tl{flex-direction:row-reverse} .ds-tape b{width:22px;height:22px;background:#262624} .ds-tape b.ds-f{background:#f5f5f0} .ds-tape b.ds-lv{background:#ff3326} .ds-ax{display:grid;justify-items:center;gap:2px} .ds-ax strong{font:400 32px/34px Anton,Impact,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em} .ds-lbl{font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase} .ds-red{color:#ff3326}"
+    },
+    {
+      "name": "Tape",
+      "kind": "custom",
+      "refersTo": "tape-block-won",
+      "description": "One square block per game needed to win: won white, in play red, still to win empty slot.",
+      "html": "<span class=\"ds-tape2\"><b class=\"ds-f\"></b><b class=\"ds-f\"></b><b class=\"ds-lv\"></b><b></b></span>",
+      "css": ".ds-tape2{display:inline-flex;gap:4px} .ds-tape2 b{width:22px;height:22px;background:#262624} .ds-tape2 b.ds-f{background:#f5f5f0} .ds-tape2 b.ds-lv{background:#ff3326}"
+    },
+    {
+      "name": "Game Bar",
+      "kind": "nav",
+      "refersTo": "game-bar",
+      "description": "Full-bleed yellow filter band; active chip inverts to black.",
+      "html": "<nav class=\"ds-games\"><button class=\"ds-chip\" aria-pressed=\"true\">All games<span class=\"ds-c\">4</span></button><button class=\"ds-chip\">LoL<span class=\"ds-c\">1</span></button><button class=\"ds-chip ds-z\">Valorant<span class=\"ds-c\">0</span></button></nav>",
+      "css": ".ds-games{display:flex;background:#ffd400;color:#0c0c0c;overflow-x:auto} .ds-chip{display:flex;gap:6px;align-items:baseline;border:0;background:none;padding:10px 14px;color:#0c0c0c;font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer} .ds-chip .ds-c{font-weight:500;letter-spacing:0} .ds-chip.ds-z{color:#4d4300} .ds-chip:hover{background:rgba(12,12,12,.08)} .ds-chip[aria-pressed=\"true\"]{background:#0c0c0c;color:#ffd400} .ds-chip:focus-visible{outline:2px solid #0c0c0c;outline-offset:-4px}"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Status tabs in label style with counts; selected gets a 4px off-white underline; Live adds a white square when matches run.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab\" aria-selected=\"true\">Live<span class=\"ds-c\">4</span><span class=\"ds-dot\"></span></button><button class=\"ds-tab\">Upcoming<span class=\"ds-c\">4</span></button><button class=\"ds-tab\">Finished<span class=\"ds-c\">3</span></button></div>",
+      "css": ".ds-tabs{display:flex;gap:28px;height:64px;background:#0c0c0c} .ds-tab{display:flex;align-items:center;gap:8px;border:0;background:none;padding:0;color:#b3b3ad;font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;box-shadow:inset 0 -4px 0 transparent;cursor:pointer;transition:color .15s cubic-bezier(.16,1,.3,1),box-shadow .15s cubic-bezier(.16,1,.3,1)} .ds-tab:hover{color:#f5f5f0} .ds-tab[aria-selected=\"true\"]{color:#f5f5f0;box-shadow:inset 0 -4px 0 #f5f5f0} .ds-tab .ds-c{font-weight:500;letter-spacing:0;color:#8a8a84} .ds-tab .ds-dot{width:8px;height:8px;background:#f5f5f0} .ds-tab:focus-visible{outline:2px solid #ffd400;outline-offset:2px}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Square yellow button with label text and optional stroked icon; used for Watch stream and empty-state redirects.",
+      "html": "<a class=\"ds-btn\" href=\"#\">Watch stream<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6 3.5h6.5V10M12.5 3.5 4 12\"/></svg></a>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:8px;border:0;background:#ffd400;color:#0c0c0c;padding:10px 16px;text-decoration:none;font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase} .ds-btn:hover{background:#ffe04d} .ds-btn:focus-visible{outline:2px solid #f5f5f0;outline-offset:2px} .ds-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Event Header",
+      "kind": "custom",
+      "refersTo": "event-header",
+      "description": "League and tournament left, game and format right in yellow, hairline below.",
+      "html": "<div class=\"ds-ev\"><span>Demo League <span class=\"ds-mut\">· Playoffs</span></span><span class=\"ds-y\">LoL · Best of 5</span></div>",
+      "css": ".ds-ev{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:24px 0 8px;border-bottom:1px solid #242422;background:#0c0c0c;color:#f5f5f0;font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase} .ds-mut{color:#b3b3ad} .ds-y{color:#ffd400}"
+    },
+    {
+      "name": "Game Lane",
+      "kind": "custom",
+      "refersTo": "game-lane",
+      "description": "Game-by-game ledger lane: a white bar leaves the axis toward the winner, length proportional to real duration.",
+      "html": "<div class=\"ds-gm\"><span class=\"ds-half ds-hl\"><span class=\"ds-meta\"><span class=\"ds-len\">32 min</span><span class=\"ds-who\">Nova Esports</span></span><span class=\"ds-trk\"><span class=\"ds-bar\" style=\"width:80%\"></span></span></span><span class=\"ds-gax\">Game 1</span><span class=\"ds-half\"><span class=\"ds-trk\"></span><span class=\"ds-meta\"></span></span></div>",
+      "css": ".ds-gm{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(0,1fr);align-items:center;height:44px;border-bottom:1px solid #242422;background:#0c0c0c;color:#f5f5f0} .ds-half{display:grid;grid-template-columns:minmax(0,1fr) 200px;align-items:center;column-gap:12px;height:100%} .ds-half.ds-hl{grid-template-columns:200px minmax(0,1fr)} .ds-trk{display:flex;align-items:center;justify-content:flex-end;height:100%} .ds-meta{display:flex;align-items:baseline;gap:10px;justify-content:flex-end} .ds-bar{height:22px;background:#f5f5f0} .ds-len{color:#b3b3ad;font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase} .ds-who{font:400 18px/20px Anton,Impact,sans-serif;text-transform:uppercase} .ds-gax{text-align:center;font:700 12px/16px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}"
+    },
+    {
+      "name": "Avatar",
+      "kind": "custom",
+      "refersTo": "avatar",
+      "description": "Square initials plate. API logos sit on the mid-grey plate until measured, then dark marks (mean luminance under 0.45) get the light plate and light marks the dark tile.",
+      "html": "<span class=\"ds-av2\">NOV</span> <span class=\"ds-av2 ds-plate\"></span> <span class=\"ds-av2 ds-dk\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path d=\"M4 4h16v16H4z\" fill=\"#0c0c0c\"/></svg></span> <span class=\"ds-av2 ds-lt\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path d=\"M4 4h16v16H4z\" fill=\"#f5f5f0\"/></svg></span>",
+      "css": ".ds-av2{display:inline-grid;place-items:center;width:32px;height:32px;background:#262624;color:#b3b3ad;font:700 11px Archivo,system-ui,sans-serif;letter-spacing:.02em;text-transform:uppercase} .ds-av2.ds-plate{background:#55554f} .ds-av2.ds-dk{background:#e4e4de} .ds-av2.ds-lt{background:#262624}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Fight Night Billing",
+    "overview": "Every match is billed like a boxing card. Two teams square off across a central VS axis; the left team is set flush right against the centre, the right team flush left, and the games each side has won stack outward from the axis as square tape blocks, like rounds on a scorecard. The page is a black poster with off-white condensed caps on it and one full-bleed band of poster yellow carrying the game filter. Nothing floats, nothing glows, nothing is rounded.\n\nDensity is high and calm: the list is a stack of hairline-separated billing rows under event headers, many visible at once. Loudness is rationed. Off-white marks what has happened (games won, the score), red marks only the game being played right now, and yellow is the poster's single colour field plus the few marks that act on it (the logo's \"Live\", the format in event headers, the primary button, focus). The match page is the same billing row blown up to poster scale, followed by a game-by-game ledger where each won game is a bar leaving the axis toward its winner, and two rosters facing each other across the same axis.",
+    "keyCharacteristics": [
+      "Symmetric VS axis: every match row mirrors around a fixed centre column.",
+      "Square tape blocks at one fixed size per breakpoint, one block per game needed to win.",
+      "Black ground, off-white type, one yellow field, one red state.",
+      "Anton condensed caps for names and numbers; Archivo tracked uppercase for every label.",
+      "Flat and square: zero radius, no elevation, hairline rules for structure."
+    ],
+    "rules": [
+      { "name": "The One Red Rule", "body": "In-Play Red marks the game being played now and nothing else. Not errors, not \"live\" badges, not hover. The tab's live indicator is an off-white square, not red.", "section": "colors" },
+      { "name": "The One Field Rule", "body": "Poster Yellow fills exactly one surface edge to edge: the game bar. Everywhere else it is a text colour or a single small control (the primary button). No yellow cards, panels or row fills.", "section": "colors" },
+      { "name": "The Functional Grey Rule", "body": "Greys carry hierarchy (muted, dim), empty state (empty slot), structure (rule line) or logo legibility (logo plate, light plate). Never decoration, never gradients.", "section": "colors" },
+      { "name": "The Measured Plate Rule", "body": "A logo's plate is chosen by the logo's measured brightness, never by hand: average luminance of opaque pixels under 0.45 gets Light Plate, otherwise Empty Slot.", "section": "colors" },
+      { "name": "The Caps Billing Rule", "body": "Team names and numbers are Anton uppercase; labels are Archivo tracked uppercase; only notes and body run in sentence case.", "section": "typography" },
+      { "name": "The Tabular Score Rule", "body": "Scores and times use tabular figures so the axis never jitters between refreshes.", "section": "typography" },
+      { "name": "The Fixed Axis Rule", "body": "The centre column has one width per context and every row honours it; content arranges itself around the axis, never the reverse.", "section": "layout" },
+      { "name": "The Flat Poster Rule", "body": "Surfaces never lift. If something needs emphasis, it changes tone (white, yellow, red), not height.", "section": "elevation" },
+      { "name": "The One Scale Rule", "body": "Tape blocks are one fixed size per breakpoint (22px, 14px on phone). A best-of-five and a best-of-three use the same block; the series length shows as block count, never as resized blocks.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do keep every match symmetric around a fixed-width axis: left team right-aligned, right team left-aligned, tapes growing outward.",
+      "Do express series length as a count of same-size square blocks (22px, 14px on phone).",
+      "Do reserve In-Play Red (#ff3326) for the game being played now.",
+      "Do set team names and scores in Anton uppercase and every label in Archivo 700, 12px, +0.08em, uppercase.",
+      "Do separate rows with 1px Rule Line hairlines and show hover as a tone step to Hover Black.",
+      "Do derive any bar length from real data (game duration) and fall back to a plain block when the data is missing.",
+      "Do keep motion to the outward wipe of a newly won block, and make it instant under reduced motion."
+    ],
+    "donts": [
+      "Don't use red for anything other than the game in play: not errors, not badges, not hover, not the tab's live indicator.",
+      "Don't fill any surface with yellow other than the game bar; elsewhere yellow is text, focus, or the primary button.",
+      "Don't add rounded corners, drop shadows, glow, blur or gradients.",
+      "Don't resize tape blocks to fit a longer series.",
+      "Don't use greys decoratively; each grey has a hierarchy, empty-slot, rule or logo-plate role.",
+      "Don't fall back to a left-aligned team list with a score column on the right."
+    ]
+  }
+}

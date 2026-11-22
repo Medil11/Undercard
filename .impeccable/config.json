@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "instrument sans",
+        "createdAt": "2026-11-22T10:56:09.568Z",
+        "reason": "assistant decided: incumbent body face of the established graphite UI (paired with Barlow Semi Condensed); a polish pass preserves it, changing it is a redesign"
+      }
+    ]
+  }
+}
