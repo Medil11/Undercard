@@ -63,6 +63,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .gbar button:hover{color:var(--text)}
 .gbar button[aria-pressed="true"]{color:var(--text);border-bottom-color:var(--ink)}
 .gbar .c{font-weight:500;opacity:.7}
+.gbar button.z{opacity:.55}  /* every game is listed, even with nothing today */
 .gbar .gi{width:18px;height:18px}
 .news .nw{display:grid;grid-template-columns:132px minmax(0,1fr);gap:16px;align-items:center;padding:12px 16px;text-decoration:none;border-top:1px solid var(--line)}
 .news .nw:first-child{border-top:0}
@@ -384,10 +385,10 @@ function row(m){
 
 function renderNav(){
   const data=NEWS_ON?(NEWS||[]).map(n=>({videogame:n.game||"other"})):view();
-  const slugs=[...new Set(data.map(m=>m.videogame))].sort((a,b)=>gname(a).localeCompare(gname(b),"en"));
+  const slugs=[...new Set([...Object.keys(GAMES),...data.map(m=>m.videogame)])].sort((a,b)=>gname(a).localeCompare(gname(b),"en"));
   const items=[["all","All games"],...slugs.filter(s=>s!=="other").map(s=>[s,gname(s)])].map(([s,l])=>[s,l,data.filter(m=>s==="all"||m.videogame===s).length]);
   document.getElementById("games").innerHTML=items.map(([s,l,c])=>
-    `<button aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("");
+    `<button class="${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("");
   document.getElementById("sec").innerHTML=`<a href="#" ${NEWS_ON?"":'aria-current="page"'}>${ICON.results}Results</a><a href="#/news" ${NEWS_ON?'aria-current="page"':""}>${ICON.news}News</a>`;
   document.getElementById("tabs").hidden=NEWS_ON;
   const liveN=LIVE.filter(inGame).length;
