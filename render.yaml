@@ -18,5 +18,7 @@ services:
         sync: false
       - key: PANDASCORE_TOKEN
         sync: false
+      - key: STARTGG_TOKEN # optional: fighting games from start.gg
+        sync: false
       - key: SYNC_SECRET # copy this value into the Supabase cron script
         generateValue: true

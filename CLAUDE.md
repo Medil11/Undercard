@@ -27,7 +27,8 @@ To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head
 ## Rules
 
 - Never commit `backend/.env`. `PANDASCORE_TOKEN` stays on the backend, never in the browser.
-- Everything stays free. Accounts allowed: PandaScore, Supabase (Postgres + pg_cron) and Render (web service).
+- Everything stays free. Accounts allowed: PandaScore, start.gg (fighting games), Supabase (Postgres + pg_cron)
+  and Render (web service).
   Deployment is documented in `docs/deploy.md`; secrets live in Render's environment and Supabase Vault only.
 - PandaScore conventions: Bearer auth, `page[size]` max 100, `sort=field` puts nulls first when ascending
   (use `scheduled_at`, not `begin_at`), plan limit 1,000 requests per hour. One sync cycle is at most 6 requests:
@@ -35,6 +36,11 @@ To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head
   stale matches re-checked by id (`/matches?filter[id]=`). Matches older than 30 days are purged.
 - `/health` is Render's liveness check and must always return 200. `/health/sync` reports data freshness
   (503 when the last success is over 10 minutes old) and is meant for an external uptime monitor.
+- start.gg (`ingestion/startgg.py`, optional, `STARTGG_TOKEN`): ids are stored negated and rows carry
+  `source="startgg"`; PandaScore maintenance (rosters, stale re-check) ignores them. Facts checked on the real API:
+  `staffPicks:null` acts like `true` (omit the filter instead), `totalGames` is the series length (`bestOf` can be
+  wrong), status comes from `startedAt`/`completedAt`, future sets often have no entrants, games have no duration,
+  40 sets with players exceed the 1,000-object limit (use 30).
 - Real payload facts: `match_type` is `best_of` or `first_to` (Overwatch: `number_of_games` = wins needed).
   StarCraft 2 matches are player vs player and are skipped. Per-player stats endpoints return 403 on the free plan.
 - Schema changes go through Alembic: edit `app/models.py`, then `alembic revision --autogenerate -m "..."`,

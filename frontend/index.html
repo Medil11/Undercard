@@ -202,7 +202,10 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 <script>
 const GAMES={"league-of-legends":"LoL","cs-go":"CS2","dota-2":"Dota 2","valorant":"Valorant","rl":"Rocket League",
   "ow":"Overwatch 2","kog":"Honor of Kings","starcraft-2":"StarCraft II","r6-siege":"Rainbow Six","pubg":"PUBG",
-  "mlbb":"Mobile Legends","lol-wild-rift":"Wild Rift","fifa":"EA FC","cod-mw":"Call of Duty","starcraft-brood-war":"StarCraft BW"};
+  "mlbb":"Mobile Legends","lol-wild-rift":"Wild Rift","fifa":"EA FC","cod-mw":"Call of Duty","starcraft-brood-war":"StarCraft BW",
+  /* fighting games, from start.gg */
+  "sf6":"Street Fighter 6","tekken-8":"Tekken 8","ssbu":"Smash Ultimate","ssbm":"Smash Melee","ggst":"Guilty Gear Strive",
+  "mk1":"Mortal Kombat 1","2xko":"2XKO","fatal-fury":"Fatal Fury"};
 const DAYS=[-1,0,1,2];  // yesterday to the day after tomorrow
 const LOCAL=["localhost","127.0.0.1",""].includes(location.hostname);
 const API=new URLSearchParams(location.search).get("api")||(LOCAL?(location.port==="8000"?location.origin:"http://localhost:8000"):null);
@@ -368,7 +371,7 @@ document.addEventListener("click",async e=>{
 const BACK=`<a class="back" href="#">${ICON.back}All matches</a>`;
 const mins=sec=>sec?`${Math.round(sec/60)} min`:"";
 function route(){
-  const id=+((location.hash.match(/^#\/match\/(\d+)$/)||[])[1]||0);
+  const id=+((location.hash.match(/^#\/match\/(-?\d+)$/)||[])[1]||0);  // start.gg ids are negative
   CUR=id||null;
   renderNav();
   if(CUR)showMatch(CUR,true);else{renderList();document.title="Undercard"}
@@ -423,7 +426,7 @@ function renderDetail(m){
       const sub=[[p.first_name,p.last_name].filter(Boolean).join(" "),p.role].filter(Boolean).map(esc).join(", ");
       return`<div class="pl">${av({name:p.name,image_url:p.image_url})}<span class="tx"><span class="hn">${esc(p.name)}</span>${sub?`<span class="rn">${sub}</span>`:""}</span><span class="nat">${esc(p.nationality)}</span></div>`}).join("")
     :`<p class="note" style="padding:8px 0">Roster not synced yet.</p>`}</div>`:"";
-  if(m.team1||m.team2)html+=`<section class="card"><div class="sec-h"><h2>Rosters</h2></div><div class="ros">${roster(m.team1)}${roster(m.team2)}</div><p class="note">Current team rosters, not necessarily the lineup for this match.</p></section>`;
+  if(m.source!=="startgg"&&(m.team1||m.team2))html+=`<section class="card"><div class="sec-h"><h2>Rosters</h2></div><div class="ros">${roster(m.team1)}${roster(m.team2)}</div><p class="note">Current team rosters, not necessarily the lineup for this match.</p></section>`;
   return html;
 }
 
@@ -442,7 +445,7 @@ async function init(){
   V=LIVE.length?"live":0;
   try{await loadDay()}catch{}
   document.getElementById("mode").innerHTML=demo?"Demo data":`Live data<span class="tz">, ${esc(TZ)}</span>`;
-  document.getElementById("foot").innerHTML=(demo?(LOCAL?"Local API not found: run <code>uvicorn app.main:app</code> in the backend folder, then reload. ":"To use your API, add <code>?api=http://localhost:8000</code> to this page address. "):"")+"Times shown in "+esc(TZ)+". Data from PandaScore.";
+  document.getElementById("foot").innerHTML=(demo?(LOCAL?"Local API not found: run <code>uvicorn app.main:app</code> in the backend folder, then reload. ":"To use your API, add <code>?api=http://localhost:8000</code> to this page address. "):"")+"Times shown in "+esc(TZ)+". Data from PandaScore and start.gg.";
   addEventListener("hashchange",route);
   route();
   setInterval(demo?simulate:refresh,demo?7000:30000);

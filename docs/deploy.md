@@ -14,6 +14,7 @@ Browser -----------------------------------------------------------+--> Supabase
   of upcoming, past, 1 batch of rosters, 1 batch of stale matches re-checked by id), so at most 360 per hour
   out of the 1,000 allowed.
 - Matches older than 30 days are deleted at the end of each cycle, so the database stays small.
+- Optional: with `STARTGG_TOKEN` set, each cycle also pulls fighting games from start.gg (see below).
 
 ## 1. Supabase project
 
@@ -38,7 +39,19 @@ Browser -----------------------------------------------------------+--> Supabase
 3. Within two minutes, Render's logs show `synced N matches` every minute, and the site has data.
    The checks at the bottom of the SQL file show the job runs and the HTTP responses (expect 202).
 
-## 4. Monitoring (recommended)
+## 4. Fighting games from start.gg (optional)
+
+1. On start.gg: avatar > **Developer Settings** > **Personal Access Tokens** > **Create new token**.
+2. On Render: add `STARTGG_TOKEN` in the service's **Environment** tab and save (the service restarts).
+
+What gets synced: events of the tracked games (Street Fighter 6, Tekken 8, Smash Ultimate and Melee, Guilty Gear
+Strive, Mortal Kombat 1, 2XKO, Fatal Fury) from two days ago to four days ahead, with at least 100 entrants or
+picked by start.gg staff (32 entrants minimum), and only their final bracket phases. Discovery runs every
+30 minutes (about 25 to 60 requests); between discoveries, only live events and those starting within two hours
+are polled. start.gg allows 80 requests per minute and 1,000 objects per request. A start.gg failure is logged and
+never stops the PandaScore sync.
+
+## 5. Monitoring (recommended)
 
 `GET /health/sync` returns `200` while the last successful sync is under 10 minutes old, and `503` otherwise,
 with the last error in the body. Point a free uptime monitor at it to get an email when ingestion stops
