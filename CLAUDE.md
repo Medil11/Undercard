@@ -8,7 +8,7 @@ Reply to the user in French. Keep code, comments and docs in English.
 - Backend: FastAPI + SQLAlchemy 2 in `backend/app`. SQLite locally, Postgres optional (Docker Compose).
 - Ingestion: `backend/ingestion`. PandaScore REST client and idempotent upserts.
 - Front: one static file, `frontend/index.html` (vanilla JS). FastAPI serves it at `/`. A Next.js port is planned.
-- Infra: `infra/terraform` is a skeleton (Lambda + EventBridge), not applied.
+- Hosting: Supabase (Postgres + pg_cron) and one free Render web service, live at https://undercard-ong3.onrender.com. See `docs/deploy.md`.
 
 ## Commands (run from `backend/`)
 

@@ -2,9 +2,11 @@
 
 ![Undercard](frontend/logo.svg)
 
+**Live:** https://undercard-ong3.onrender.com (free Render instance: the first load after a deploy can take a minute).
+
 FlashScore-style live scores for esports: matches in progress, upcoming fixtures and results across the major games (League of Legends, CS2, Dota 2, Valorant, ...).
 
-Personal project built to practice an end-to-end data product: ingestion, storage, API, infrastructure as code and CI.
+Personal project built to practice an end-to-end data product: ingestion, storage, migrations, API, deployment and CI.
 
 ## Features
 
@@ -12,7 +14,8 @@ Personal project built to practice an end-to-end data product: ingestion, storag
 - REST API: filter by status and game, match details
 - Multi-game data model
 - Tests (API and ingestion with a mocked provider), lint, GitHub Actions CI
-- Runs locally with a demo seed, Docker Compose available, Terraform skeleton for AWS (Lambda + EventBridge)
+- Match page: game-by-game results, team rosters, stream link
+- Runs locally with a demo seed, Docker Compose available, deployed for free on Supabase + Render
 
 ## Architecture
 
@@ -74,11 +77,10 @@ docker compose up --build   # Postgres + API + ingestion worker
 ## Project layout
 
 ```
-backend/    FastAPI app, ingestion, tests
-frontend/   Next.js app (planned)
-infra/      Terraform/OpenTofu
-docs/       Architecture, data model, roadmap
-scripts/    Lambda packaging
+backend/    FastAPI app, ingestion, Alembic migrations, tests
+frontend/   Static front (index.html), fonts, logo
+docs/       Architecture, deployment, data model, roadmap
+render.yaml Render Blueprint
 ```
 
 ## Roadmap

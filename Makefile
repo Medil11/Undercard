@@ -1,4 +1,4 @@
-.PHONY: install migrate dev seed test lint format up down sync lambda-zip
+.PHONY: install migrate dev seed test lint format up down sync
 
 install:
 	cd backend && pip install -e ".[dev]"
@@ -29,6 +29,3 @@ down:
 
 sync:
 	cd backend && python -m ingestion.sync
-
-lambda-zip:
-	./scripts/package_lambda.sh
