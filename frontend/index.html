@@ -41,8 +41,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hd-in{max-width:1200px;margin:0 auto;padding:0 20px;height:60px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:32px}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;font-family:"Unbounded",var(--font);font-weight:600;font-size:18px;letter-spacing:-.01em}
 .logo svg{width:26px;height:24px;flex:none}
-.seg{display:inline-flex;gap:4px;padding:4px;background:var(--bg);border-radius:999px;justify-self:start;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg{display:inline-flex;gap:4px;padding:4px;background:var(--card);border-radius:999px;justify-self:start;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
+.seg[hidden]{display:none}
 .seg button{flex:none;white-space:nowrap}
 .seg button{display:flex;align-items:center;gap:6px;border:0;background:none;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--mut);transition:background-color .15s var(--ease),color .15s var(--ease)}
 .seg button:hover{color:var(--text)}
@@ -50,24 +51,37 @@ button{font:inherit;color:inherit;cursor:pointer}
 .seg .c{font-weight:500;opacity:.7}
 .seg .dot{width:6px;height:6px;border-radius:50%;background:var(--live)}
 .status{text-align:right}
+.sec{display:flex;align-self:stretch;gap:4px}
+.sec a{display:flex;align-items:center;gap:8px;padding:0 16px;text-decoration:none;font-weight:700;font-size:14px;color:var(--mut);border-bottom:3px solid transparent;transition:color .15s var(--ease)}
+.sec a:hover{color:var(--text)}
+.sec a[aria-current="page"]{color:var(--text);border-bottom-color:var(--ink)}
+.sec svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.gbar{border-top:1px solid var(--line)}
+.gbar-in{max-width:1200px;margin:0 auto;padding:0 8px;display:flex;overflow-x:auto;scrollbar-width:none}
+.gbar-in::-webkit-scrollbar{display:none}
+.gbar button{flex:none;display:flex;align-items:center;gap:8px;border:0;background:none;padding:12px 12px 9px;font-weight:700;font-size:13px;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap;transition:color .15s var(--ease)}
+.gbar button:hover{color:var(--text)}
+.gbar button[aria-pressed="true"]{color:var(--text);border-bottom-color:var(--ink)}
+.gbar .c{font-weight:500;opacity:.7}
+.gbar .gi{width:18px;height:18px}
+.news .nw{display:grid;grid-template-columns:132px minmax(0,1fr);gap:16px;align-items:center;padding:12px 16px;text-decoration:none;border-top:1px solid var(--line)}
+.news .nw:first-child{border-top:0}
+.news .nw.noimg{grid-template-columns:minmax(0,1fr)}
+.news .nw:hover .t{text-decoration:underline}
+.news .pic{width:132px;height:74px;object-fit:cover;border-radius:10px;background:var(--bg)}
+.news .t{display:block;font-weight:700;line-height:20px}
+.news .sm{margin-top:4px;color:var(--mut);font-size:13px;line-height:18px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.news .mt{display:flex;align-items:center;gap:6px;margin-top:6px;color:var(--mut);font-size:12px;font-weight:600}
 .mine{border:1px solid var(--line);background:none;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px;transition:background-color .15s var(--ease)}
 .mine:hover{background:var(--hover)}
 .mine[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
 
 /* Layout */
-.shell{max-width:1200px;margin:0 auto;padding:20px;display:grid;grid-template-columns:232px minmax(0,1fr);gap:20px;align-items:start}
+.shell{max-width:880px;margin:0 auto;padding:20px;display:grid;gap:16px}
 .card{background:var(--card);border-radius:var(--r-card);overflow:hidden}
-.side{position:sticky;top:80px;padding:8px}
-.side h2{margin:8px 12px 6px;font-size:13px;font-weight:600;color:var(--mut)}
-.nav{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;padding:9px 12px;border-radius:10px;text-align:left;font-size:14px;font-weight:500;transition:background-color .15s var(--ease)}
 .gn{display:flex;align-items:center;gap:8px}
 .gi{width:16px;height:16px;border-radius:4px;flex:none}
 @media (prefers-color-scheme:dark){.gi{background:#fff;padding:1px}}  /* some marks (Smash) are black */
-.nav:hover{background:var(--hover)}
-.nav[aria-pressed="true"]{background:var(--bg);font-weight:700}
-.nav .c{color:var(--mut);font-weight:500}
-.nav.z{color:var(--mut)}
-.chips{display:none}
 main{display:grid;gap:16px;min-width:0}
 
 /* Tournament card + match rows */
@@ -190,19 +204,15 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 
 @media (prefers-reduced-motion:reduce){.dots i.new,.big-dots i.new{animation:none}*{transition:none!important}}
 @media (max-width:899px){
-  .hd-in{grid-template-columns:1fr auto;grid-template-areas:"logo status" "seg seg";height:auto;row-gap:10px;padding-top:12px;padding-bottom:12px}
+  .hd-in{grid-template-columns:1fr auto;grid-template-areas:"logo status" "sec sec";height:auto;row-gap:6px;padding-top:12px;padding-bottom:0}
   .logo{grid-area:logo}.status{grid-area:status}
-  .seg{grid-area:seg;justify-self:stretch}
+  .sec{grid-area:sec;height:44px}
+  .sec a{padding:0 12px}
+  .seg{justify-self:stretch}
+  .news .nw{grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px}
+  .news .pic{width:96px;height:64px}
   .seg button{justify-content:center}
   .shell{grid-template-columns:1fr;padding:12px}
-  .side{display:none}
-  .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:0 12px}
-  .chips::-webkit-scrollbar{display:none}
-  .chip{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:999px;font-size:14px;font-weight:600}
-  .chip .c{color:var(--mut);font-weight:500}
-  .chip.z{color:var(--mut)}
-  .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
-  .chip[aria-pressed="true"] .c{color:inherit;opacity:.7}
 }
 @media (max-width:560px){
   .row{grid-template-columns:52px minmax(0,1fr) auto 24px;column-gap:12px;padding:10px 12px}
@@ -223,11 +233,11 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 <body>
 <header class="hd"><div class="hd-in">
   <a class="logo" href="#" aria-label="Undercard, all matches"><svg viewBox="2 3 28 26" aria-hidden="true"><path d="M12.03 12.44 16 5.5l3.97 6.94M7.97 19.56 4 26.5h8M20 26.5h8l-3.97-6.94" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="19.5" r="2" fill="currentColor"/></svg><span>Undercard</span></a>
-  <div class="seg" id="tabs" role="tablist" aria-label="Match status"></div>
+  <nav class="sec" id="sec" aria-label="Sections"></nav>
   <div class="status" id="mode"></div>
-</div></header>
+</div><nav class="gbar" aria-label="Games"><div class="gbar-in" id="games"></div></nav></header>
 <div class="shell">
-  <aside class="side card" aria-label="Games"><h2>Games</h2><nav id="side"></nav></aside>
+  <div class="seg" id="tabs" role="tablist" aria-label="Match status"></div>
   <main id="list" aria-live="polite"></main>
 </div>
 <p class="foot" id="foot"></p>
@@ -292,7 +302,9 @@ const fmt=m=>m.match_type==="first_to"?`First to ${m.number_of_games||"?"}`:`Bes
 const STATUS={canceled:"Canceled",postponed:"Postponed"};
 const ICON={
   back:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>`,
-  out:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M12.5 3.5 4 12"/></svg>`};
+  out:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M12.5 3.5 4 12"/></svg>`,
+  results:`<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="2.5"/><path d="M10 4v12M6 8v4M13 8h1.5v4H13z"/></svg>`,
+  news:`<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2.5"/><path d="M6 7h8M6 10h8M6 13h5"/></svg>`};
 
 function when(iso){
   if(!iso)return["",""];
@@ -371,24 +383,23 @@ function row(m){
 }
 
 function renderNav(){
-  const data=view();
+  const data=NEWS_ON?(NEWS||[]).map(n=>({videogame:n.game||"other"})):view();
   const slugs=[...new Set(data.map(m=>m.videogame))].sort((a,b)=>gname(a).localeCompare(gname(b),"en"));
-  const items=[["all","All games"],...slugs.map(s=>[s,gname(s)])].map(([s,l])=>[s,l,data.filter(m=>s==="all"||m.videogame===s).length]);
-  document.getElementById("side").innerHTML=items.map(([s,l,c])=>
-    `<button class="nav ${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}"><span class="gn">${gico(s)}${esc(l)}</span><span class="c num">${c}</span></button>`).join("");
+  const items=[["all","All games"],...slugs.filter(s=>s!=="other").map(s=>[s,gname(s)])].map(([s,l])=>[s,l,data.filter(m=>s==="all"||m.videogame===s).length]);
+  document.getElementById("games").innerHTML=items.map(([s,l,c])=>
+    `<button aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("");
+  document.getElementById("sec").innerHTML=`<a href="#" ${NEWS_ON?"":'aria-current="page"'}>${ICON.results}Results</a><a href="#/news" ${NEWS_ON?'aria-current="page"':""}>${ICON.news}News</a>`;
+  document.getElementById("tabs").hidden=NEWS_ON;
   const liveN=LIVE.filter(inGame).length;
   document.getElementById("tabs").innerHTML=
     `<button role="tab" aria-selected="${!CUR&&V==="live"}" data-v="live">${liveN?'<span class="dot" aria-hidden="true"></span>':""}Live<span class="c num">${liveN}</span></button>`+
     DAYS.map(o=>`<button role="tab" aria-selected="${!CUR&&V===o}" data-v="${o}">${dayLabel(o)}</button>`).join("");
   document.getElementById("mode").innerHTML=`<button class="mine" aria-pressed="${!CUR&&V==="team"}" data-v="team">My team</button>`;
-  CHIPS=`<div class="chips" role="group" aria-label="Filter by game">${items.map(([s,l,c])=>
-    `<button class="chip ${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("")}</div>`;
 }
-let CHIPS="";
 function renderList(){
   const ms=view().filter(inGame);
   const el=document.getElementById("list");
-  const top=(V==="team"?PICK():"")+CHIPS;
+  const top=V==="team"?PICK():"";
   if(!ms.length){
     const msg=V==="live"?"No live matches right now"
       :V==="team"?(TEAM?`No matches for ${esc(TEAM)} in the last 30 days`:"Choose a team to follow its matches in every game")
@@ -407,7 +418,23 @@ function renderList(){
     return`<section class="card" aria-label="${esc(f.league_name)}"><div class="th"><span class="lg">${lgi(f)}${esc(f.league_name)}${f.tournament_name?`<span>${esc(f.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(f.videogame)}${esc(gname(f.videogame))}</span>${same?`<span>${fmt(f)}</span>`:""}</span></div>`+
       list.map(row).join("")+`</section>`}).join("");
 }
-function render(){renderNav();if(CUR)showMatch(CUR,false);else renderList()}
+function render(){renderNav();if(NEWS_ON)renderNews();else if(CUR)showMatch(CUR,false);else renderList()}
+
+/* News: #/news, headlines from esports RSS feeds via the API */
+let NEWS=null,NEWS_ON=false;
+const ago=iso=>{const m=Math.round((Date.now()-new Date(iso))/6e4);return m<60?`${Math.max(m,1)} min ago`:m<1440?`${Math.round(m/60)} h ago`:`${Math.round(m/1440)} d ago`};
+async function loadNews(){
+  if(demo){NEWS=[];return}
+  try{const r=await fetch(base()+"/news");NEWS=r.ok?await r.json():[]}catch{NEWS=[]}
+}
+function renderNews(){
+  const el=document.getElementById("list");
+  if(!NEWS){el.innerHTML=`<div class="card empty"><p>Loading news</p></div>`;return}
+  const list=NEWS.filter(n=>G==="all"||n.game===G);
+  if(!list.length){el.innerHTML=`<div class="card empty"><p>${demo?"News appears when the API is connected":"No news"+(G==="all"?"":` for ${gname(G)}`)}</p>${G!=="all"?`<button class="btn" data-g="all">Show all games</button>`:""}</div>`;return}
+  el.innerHTML=`<section class="card news">${list.map(n=>{const img=safeUrl(n.image_url);
+    return`<a class="nw ${img?"":"noimg"}" href="${esc(safeUrl(n.url)||"#")}" target="_blank" rel="noopener noreferrer">${img?`<img class="pic" src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">`:""}<span><span class="t">${esc(n.title)}</span>${n.summary?`<span class="sm">${esc(n.summary)}</span>`:""}<span class="mt">${gico(n.game)}${esc(n.source)}${n.published_at?` · ${ago(n.published_at)}`:""}</span></span></a>`}).join("")}</section>`;
+}
 const PICK=()=>`<form class="card pick" id="pick"><label for="team-q">My team</label>
   <span class="pick-in"><input id="team-q" value="${esc(TEAM)}" placeholder="Search a team, e.g. Team Liquid" autocomplete="off" aria-controls="team-sugg">
   <span class="sugg" id="team-sugg" role="list"></span></span><button class="btn">Show matches</button></form>`;
@@ -439,7 +466,7 @@ document.addEventListener("click",async e=>{
   const g=e.target.closest("[data-g]"),v=e.target.closest("[data-v]");
   if(g)G=g.dataset.g;
   if(v){const x=v.dataset.v;V=x==="live"||x==="team"?x:+x;await loadDay()}
-  if(g||v){if(CUR)location.hash="";else render()}
+  if(g||v){if(CUR||(NEWS_ON&&v))location.hash="";else render()}
 });
 
 /* Match page: #/match/<id> */
@@ -448,8 +475,12 @@ const mins=sec=>sec?`${Math.round(sec/60)} min`:"";
 function route(){
   const id=+((location.hash.match(/^#\/match\/(-?\d+)$/)||[])[1]||0);  // start.gg ids are negative
   CUR=id||null;
+  const news=location.hash==="#/news";
+  if(news!==NEWS_ON)G="all";  // each section has its own games
+  NEWS_ON=news;
   renderNav();
-  if(CUR)showMatch(CUR,true);else{renderList();document.title="Undercard"}
+  if(NEWS_ON){document.title="News · Undercard";renderNews();if(!NEWS)loadNews().then(()=>NEWS_ON&&render())}
+  else if(CUR)showMatch(CUR,true);else{renderList();document.title="Undercard"}
 }
 async function showMatch(id,top){
   let m=null;

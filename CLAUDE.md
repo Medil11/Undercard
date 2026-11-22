@@ -36,6 +36,8 @@ To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head
   stale matches re-checked by id (`/matches?filter[id]=`). Matches older than 30 days are purged.
   Tournament standings are not synced: `GET /matches/{id}/standings` fetches them on demand and caches them
   10 minutes per tournament (in memory).
+- News (`/news`, `app/routers/news.py`): free RSS feeds (HLTV, Dexerto), no account, cached 15 minutes.
+  Dexerto's game comes from the first URL path segment (`PATH_GAMES`).
 - `/health` is Render's liveness check and must always return 200. `/health/sync` reports data freshness
   (503 when the last success is over 10 minutes old) and is meant for an external uptime monitor.
 - start.gg (`ingestion/startgg.py`, optional, `STARTGG_TOKEN`): ids are stored negated and rows carry

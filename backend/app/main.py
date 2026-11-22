@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import health, internal, matches
+from app.routers import health, internal, matches, news
 
 # The schema is managed by Alembic: run `alembic upgrade head` before starting the app.
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -20,6 +20,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"])
 
 app.include_router(health.router)
 app.include_router(matches.router)
+app.include_router(news.router)
 app.include_router(internal.router)
 
 # Serve the static front at "/" so one command runs everything locally.
