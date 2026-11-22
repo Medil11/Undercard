@@ -3,8 +3,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import get_db
-from app.models import Match
-from app.schemas import MatchOut, VideogameOut
+from app.models import Match, Team
+from app.schemas import MatchDetailOut, MatchOut, VideogameOut
 
 router = APIRouter(tags=["matches"])
 
@@ -25,9 +25,18 @@ def list_matches(
     return list(db.scalars(query.order_by(order).limit(limit)))
 
 
-@router.get("/matches/{match_id}", response_model=MatchOut)
+@router.get("/matches/{match_id}", response_model=MatchDetailOut)
 def get_match(match_id: int, db: Session = Depends(get_db)) -> Match:
-    match = db.get(Match, match_id)
+    """One match with its games, both rosters and the main stream."""
+    match = db.get(
+        Match,
+        match_id,
+        options=[
+            selectinload(Match.team1).selectinload(Team.players),
+            selectinload(Match.team2).selectinload(Team.players),
+            selectinload(Match.games),
+        ],
+    )
     if match is None:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
