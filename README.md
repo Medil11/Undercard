@@ -10,7 +10,7 @@ Personal project built to practice an end-to-end data product: ingestion, storag
 - REST API: filter by status and game, match details
 - Multi-game data model
 - Tests (API and ingestion with a mocked provider), lint, GitHub Actions CI
-- Docker Compose for local development, Terraform skeleton for AWS (Lambda + EventBridge)
+- Runs locally with a demo seed, Docker Compose available, Terraform skeleton for AWS (Lambda + EventBridge)
 
 ## Architecture
 
@@ -20,22 +20,40 @@ See [docs/architecture.md](docs/architecture.md).
 PandaScore -> Ingestion (Lambda/worker) -> PostgreSQL -> FastAPI -> Frontend
 ```
 
-## Quick start
+## Run locally (no external service)
+
+You only need Python 3.11+. No account, no token, no Docker.
 
 ```bash
-cp .env.example .env        # add your PandaScore token
-docker compose up --build   # db + api + ingestion worker
+cd backend
+python -m venv .venv
+source .venv/bin/activate        # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python -m ingestion.seed_demo    # fills a local SQLite file with fictional matches
+uvicorn app.main:app --reload
 ```
 
-API docs: http://localhost:8000/docs
+Open http://localhost:8000: FastAPI serves the front (`frontend/index.html`) and the API.
+Interactive API docs: http://localhost:8000/docs.
 
-Without Docker:
+To reset the demo data, delete `backend/esport_live.db` and run the seed again.
+
+### Real data (optional)
+
+Create `backend/.env` with a free [PandaScore](https://developers.pandascore.co) token:
+
+```
+PANDASCORE_TOKEN=your_token_here
+```
+
+Then run `python -m ingestion.sync` (once) or `python -m ingestion.sync --loop --interval 60`.
+This is the only call to an external service, and it is optional.
+
+### Docker Compose (optional)
 
 ```bash
-make install
-make test
-PANDASCORE_TOKEN=... make sync   # one-off sync into a local SQLite file
-make dev                         # API on :8000
+cp .env.example .env
+docker compose up --build   # Postgres + API + ingestion worker
 ```
 
 ## API
