@@ -55,7 +55,8 @@ To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head
 - UI copy is in English, sentence case (no all-caps labels).
 - Clean and rounded: light theme by default (#eef1f5 ground, white cards), dark theme via prefers-color-scheme.
   Cards 16px radius, logos 8px, pills and buttons fully rounded. No gradients, glows, emoji or looping animation.
-- Archivo only (self-hosted in `frontend/fonts`); Anton is kept for the logo wordmark only. Yellow is in the logo only.
+- Archivo only (self-hosted in `frontend/fonts`); Unbounded 600 is kept for the logo wordmark only. The logo mark is a
+  monochrome triangle broken into its three corners, with a dot at its centre (white on dark).
 - Red is reserved for live status. Series state is shown as dots (one per game to win, red for the game in play).
 - Match page: teams face each other around a centred score; each game is a rounded bar toward its winner,
   its length the game duration (a single dot when durations are missing).

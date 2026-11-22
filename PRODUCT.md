@@ -42,7 +42,7 @@ Reading a series at a glance. Where score sites show a bare number, Undercard ma
 ## Brand Commitments
 
 - Name: Undercard (renamed from Esport Live on 2026-11-22). The undercard is every bout of a fight night, not just the headliner: every match across every game.
-- Logo: `frontend/icon.svg` (mark: two series tapes facing across the yellow VS axis, red for the game in play) and `frontend/logo.svg` (mark + wordmark, UNDER in off-white, CARD in yellow).
+- Logo: `frontend/icon.svg` (mark: a triangle broken into its three corners, a dot at its centre) and `frontend/logo.svg` (mark + Unbounded 600 wordmark, all white on black).
 - No emoji in the interface.
 - Team logos come from the API, with a neutral initials fallback.
 - Reference for information density and structure: Liquipedia (Upcoming / Completed tabs, explicit series format).

@@ -11,9 +11,10 @@
 <style>
 @font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url("fonts/archivo-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
 @font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url("fonts/archivo-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Unbounded";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/unbounded-600-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
 :root{
   --bg:#eef1f5;--card:#fff;--ink:#1d2026;--text:#1d2026;--mut:#6a717d;--line:#e7eaef;--hover:#f5f7fa;
-  --live:#e5243b;--live-bg:#fdecee;--dot:#d9dde3;--brand:#ffd400;
+  --live:#e5243b;--live-bg:#fdecee;--dot:#d9dde3;
   --plate:#e9ecf0;--plate-lt:#1d2026;--plate-dk:transparent;
   --r-card:16px;--r-av:8px;
   --font:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -38,8 +39,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* Header */
 .hd{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
 .hd-in{max-width:1200px;margin:0 auto;padding:0 20px;height:60px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:32px}
-.logo{display:flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:20px;letter-spacing:-.01em}
-.logo svg{width:30px;height:28px;flex:none}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;font-family:"Unbounded",var(--font);font-weight:600;font-size:18px;letter-spacing:-.01em}
+.logo svg{width:26px;height:24px;flex:none}
 .seg{display:inline-flex;gap:4px;padding:4px;background:var(--bg);border-radius:999px;justify-self:start;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
 .seg button{flex:none;white-space:nowrap}
@@ -205,7 +206,7 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 </head>
 <body>
 <header class="hd"><div class="hd-in">
-  <a class="logo" href="#" aria-label="Undercard, all matches"><svg viewBox="2 3 28 26" aria-hidden="true"><rect x="15" y="4" width="2" height="24" rx="1" fill="#ffd400"/><rect x="3" y="13" width="5" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="13" width="5" height="6" rx="1.5" fill="#e5243b"/><rect x="18" y="13" width="5" height="6" rx="1.5" fill="#e5243b"/><rect x="24" y="13" width="5" height="6" rx="1.5" fill="currentColor" opacity=".25"/></svg><span>Undercard</span></a>
+  <a class="logo" href="#" aria-label="Undercard, all matches"><svg viewBox="2 3 28 26" aria-hidden="true"><path d="M12.03 12.44 16 5.5l3.97 6.94M7.97 19.56 4 26.5h8M20 26.5h8l-3.97-6.94" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="19.5" r="2" fill="currentColor"/></svg><span>Undercard</span></a>
   <div class="seg" id="tabs" role="tablist" aria-label="Match status"></div>
   <div class="status" id="mode"></div>
 </div></header>
