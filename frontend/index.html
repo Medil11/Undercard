@@ -100,6 +100,10 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 .av.img.md{background:transparent}
 
 .empty{padding:48px 16px;text-align:center;color:var(--mut)}
+.pick{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 16px}
+.pick label{font-weight:700}
+.pick input{flex:1;min-width:180px;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;padding:9px 16px;font:inherit}
+.pick input:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 .empty p{margin:0 0 16px;font-size:17px;font-weight:600;color:var(--text)}
 .btn{display:inline-flex;align-items:center;gap:8px;border:0;background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;transition:opacity .15s var(--ease)}
 .btn:hover{opacity:.85}
@@ -170,7 +174,6 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
   .chip.z{color:var(--mut)}
   .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
   .chip[aria-pressed="true"] .c{color:inherit;opacity:.7}
-  .status .tz{display:none}
 }
 @media (max-width:560px){
   .row{grid-template-columns:52px minmax(0,1fr) auto 24px;column-gap:12px;padding:10px 12px}
@@ -213,7 +216,7 @@ const LOCAL=["localhost","127.0.0.1",""].includes(location.hostname);
 const API=new URLSearchParams(location.search).get("api")||
   (location.protocol==="file:"||(LOCAL&&location.port!=="8000")?"http://localhost:8000":location.origin);
 const TZ=Intl.DateTimeFormat().resolvedOptions().timeZone;
-let LIVE=[],DAY=[],V="live",G="all",demo=true,CUR=null;
+let LIVE=[],DAY=[],V="live",G="all",demo=true,CUR=null,TEAM=localStorage.getItem("undercard.team")||"";
 const SEEN=new Map();  // match id -> "s1|s2", to animate newly won games
 
 /* Demo data, same shape as GET /matches */
@@ -310,8 +313,8 @@ function label(m){
 function statusCell(m){
   const[day,time]=when(m.scheduled_at),start=when(m.begin_at||m.scheduled_at)[1];
   if(m.status==="running")return`<span class="lv">Live</span><span>Game ${(m.team1_score||0)+(m.team2_score||0)+1}</span><span class="num">${start}</span>`;
-  const d=V==="live"?day:"";  // a day tab already says which day it is
-  if(m.status==="finished")return`<b>Final</b><span class="num">${start}</span>`;
+  const d=V==="live"||V==="team"?day:"";  // a day tab already says which day it is
+  if(m.status==="finished")return`<b>Final</b><span class="num">${d?d+" ":""}${start}</span>`;
   if(STATUS[m.status])return`<b>${STATUS[m.status]}</b><span>${d}</span>`;
   return`<b class="num">${time}</b><span>${eta(m.scheduled_at)||d}</span>`;
 }
@@ -338,6 +341,7 @@ function renderNav(){
   const liveN=LIVE.filter(inGame).length;
   document.getElementById("tabs").innerHTML=
     `<button role="tab" aria-selected="${!CUR&&V==="live"}" data-v="live">${liveN?'<span class="dot" aria-hidden="true"></span>':""}Live<span class="c num">${liveN}</span></button>`+
+    `<button role="tab" aria-selected="${!CUR&&V==="team"}" data-v="team">My team</button>`+
     DAYS.map(o=>`<button role="tab" aria-selected="${!CUR&&V===o}" data-v="${o}">${dayLabel(o)}</button>`).join("");
   CHIPS=`<div class="chips" role="group" aria-label="Filter by game">${items.map(([s,l,c])=>
     `<button class="chip ${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${esc(l)}<span class="c num">${c}</span></button>`).join("")}</div>`;
@@ -346,27 +350,49 @@ let CHIPS="";
 function renderList(){
   const ms=view().filter(inGame);
   const el=document.getElementById("list");
+  const top=(V==="team"?PICK():"")+CHIPS;
   if(!ms.length){
-    const msg=V==="live"?"No live matches right now":`No matches ${V===0?"today":V===1?"tomorrow":V===-1?"yesterday":"on this day"}${G==="all"?"":` for ${gname(G)}`}`;
+    const msg=V==="live"?"No live matches right now"
+      :V==="team"?(TEAM?`No matches for ${esc(TEAM)} in the last 30 days`:"Choose a team to follow its matches in every game")
+      :`No matches ${V===0?"today":V===1?"tomorrow":V===-1?"yesterday":"on this day"}${G==="all"?"":` for ${gname(G)}`}`;
     const go=V==="live"?`<button class="btn" data-v="0">See today's matches</button>`:G!=="all"?`<button class="btn" data-g="all">Show all games</button>`:"";
-    el.innerHTML=CHIPS+`<div class="card empty"><p>${msg}</p>${go}</div>`;
+    el.innerHTML=top+`<div class="card empty"><p>${msg}</p>${go}</div>`;
     return;
   }
   const key=m=>m.videogame+"|"+m.league_name+"|"+m.tournament_name;
-  const sorted=[...ms].sort((a,b)=>new Date(a.scheduled_at)-new Date(b.scheduled_at));
+  const t=m=>new Date(m.scheduled_at);
+  const sorted=[...ms].sort((a,b)=>V==="team"?t(b)-t(a):t(a)-t(b));  // a team's history reads newest first
   const groups=new Map();  // insertion order follows time, so tournaments appear by their first match
   sorted.forEach(m=>{if(!groups.has(key(m)))groups.set(key(m),[]);groups.get(key(m)).push(m)});
-  el.innerHTML=CHIPS+[...groups.values()].map(list=>{
+  el.innerHTML=top+[...groups.values()].map(list=>{
     const f=list[0],same=list.every(m=>fmt(m)===fmt(f));
     return`<section class="card" aria-label="${esc(f.league_name)}"><div class="th"><span class="lg">${esc(f.league_name)}${f.tournament_name?`<span>${esc(f.tournament_name)}</span>`:""}</span><span class="rt"><span>${esc(gname(f.videogame))}</span>${same?`<span>${fmt(f)}</span>`:""}</span></div>`+
       list.map(row).join("")+`</section>`}).join("");
 }
 function render(){renderNav();if(CUR)showMatch(CUR,false);else renderList()}
+const PICK=()=>`<form class="card pick" id="pick"><label for="team-q">My team</label>
+  <input id="team-q" list="team-list" value="${esc(TEAM)}" placeholder="Search a team, e.g. Team Liquid" autocomplete="off">
+  <datalist id="team-list"></datalist><button class="btn">Show matches</button></form>`;
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="pick")return;
+  e.preventDefault();
+  TEAM=document.getElementById("team-q").value.trim();
+  localStorage.setItem("undercard.team",TEAM);
+  await loadDay();render();
+});
+document.addEventListener("input",async e=>{
+  const q=e.target.id==="team-q"?e.target.value.trim():"";
+  if(q.length<2)return;
+  let names;
+  try{names=demo?[...new Set(R.flatMap(m=>[m.team1.name,m.team2.name]))].filter(n=>n.toLowerCase().includes(q.toLowerCase()))
+    :await(await fetch(base()+"/teams?q="+encodeURIComponent(q))).json()}catch{return}
+  document.getElementById("team-list").innerHTML=names.map(n=>`<option value="${esc(n)}">`).join("");
+});
 
 document.addEventListener("click",async e=>{
   const g=e.target.closest("[data-g]"),v=e.target.closest("[data-v]");
   if(g)G=g.dataset.g;
-  if(v){V=v.dataset.v==="live"?"live":+v.dataset.v;await loadDay()}
+  if(v){const x=v.dataset.v;V=x==="live"||x==="team"?x:+x;await loadDay()}
   if(g||v){if(CUR)location.hash="";else render()}
 });
 
@@ -437,6 +463,11 @@ async function getMatches(query){const r=await fetch(base()+"/matches?"+query);i
 async function loadLive(){LIVE=demo?R.filter(m=>m.status==="running"):await getMatches("status=running&limit=200")}
 async function loadDay(){
   if(V==="live")return;
+  if(V==="team"){
+    const mine=m=>[m.team1?.name,m.team2?.name].some(n=>n&&n.toLowerCase()===TEAM.toLowerCase());
+    DAY=!TEAM?[]:demo?R.filter(mine):await getMatches(new URLSearchParams({team:TEAM,limit:"500"}));
+    return;
+  }
   const q=new URLSearchParams({since:dayStart(V).toISOString(),until:dayStart(V+1).toISOString(),limit:"500"});
   DAY=demo?R.filter(m=>inDay(m,V)):await getMatches(q);
 }
@@ -447,7 +478,7 @@ async function init(){
   if(demo)await loadLive();
   V=LIVE.length?"live":0;
   try{await loadDay()}catch{}
-  document.getElementById("mode").innerHTML=demo?"Demo data":`Live data<span class="tz">, ${esc(TZ)}</span>`;
+  document.getElementById("mode").textContent=demo?"Demo data":"";
   document.getElementById("foot").innerHTML=(demo?(LOCAL?"Local API not found: run <code>uvicorn app.main:app</code> in the backend folder, then reload. ":"To use your API, add <code>?api=http://localhost:8000</code> to this page address. "):"")+"Times shown in "+esc(TZ)+". Data from PandaScore and start.gg.";
   addEventListener("hashchange",route);
   route();
@@ -462,7 +493,7 @@ function simulate(){
   if(m[k]+1>=need(m))return;
   m[k]++;render();
 }
-async function refresh(){try{await loadLive();await loadDay();render()}catch{}}
+async function refresh(){if(document.activeElement?.id==="team-q")return;try{await loadLive();await loadDay();render()}catch{}}
 init();
 </script>
 </body>

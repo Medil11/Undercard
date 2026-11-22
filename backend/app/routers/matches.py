@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import get_db
@@ -17,6 +17,7 @@ def list_matches(
     videogame: str | None = Query(None, description="e.g. league-of-legends, cs-go, dota-2"),
     since: datetime | None = Query(None, description="scheduled at or after (ISO 8601)"),
     until: datetime | None = Query(None, description="scheduled before (ISO 8601)"),
+    team: str | None = Query(None, description="team name, any game, case-insensitive"),
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
 ) -> list[Match]:
@@ -25,6 +26,9 @@ def list_matches(
         query = query.where(Match.status == status)
     if videogame:
         query = query.where(Match.videogame == videogame)
+    if team:
+        same = func.lower(Team.name) == team.strip().lower()
+        query = query.where(or_(Match.team1.has(same), Match.team2.has(same)))
     if since:
         query = query.where(Match.scheduled_at >= since)
     if until:
@@ -48,6 +52,16 @@ def get_match(match_id: int, db: Session = Depends(get_db)) -> Match:
     if match is None:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
+
+
+@router.get("/teams", response_model=list[str])
+def search_teams(
+    q: str = Query(..., min_length=2, description="part of a team name"),
+    db: Session = Depends(get_db),
+) -> list[str]:
+    """Distinct team names for the "My team" search box."""
+    query = select(Team.name).where(Team.name.ilike(f"%{q.strip()}%")).distinct()
+    return list(db.scalars(query.order_by(Team.name).limit(20)))
 
 
 @router.get("/videogames", response_model=list[VideogameOut])

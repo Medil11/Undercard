@@ -74,3 +74,18 @@ def test_health_sync_reports_freshness(client, db):
 def test_times_are_returned_with_a_timezone(client, db):
     seed(db)
     assert client.get("/matches/1001").json()["scheduled_at"].endswith(("Z", "+00:00"))
+
+
+def test_team_filter_matches_the_name_in_any_game(client, db):
+    seed(db)  # FINISHED_MATCH is Alpha vs Beta
+    upsert_match(db, {**FINISHED_MATCH, "id": 1004, "videogame": {"slug": "valorant"}})
+    db.commit()
+    ids = [m["id"] for m in client.get("/matches", params={"team": "alpha"}).json()]
+    assert sorted(ids) == [1001, 1004]
+    assert client.get("/matches", params={"team": "Nobody"}).json() == []
+
+
+def test_search_teams(client, db):
+    seed(db)
+    assert client.get("/teams", params={"q": "alp"}).json() == ["Alpha"]
+    assert client.get("/teams", params={"q": "a"}).status_code == 422  # two characters minimum
