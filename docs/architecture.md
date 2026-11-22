@@ -1,18 +1,8 @@
 # Architecture
 
-```mermaid
-flowchart LR
-    CRON[Supabase pg_cron<br/>every minute] -->|POST /internal/sync| APP
-    PS[PandaScore API] --> APP
-    subgraph APP[Render web service]
-        ING[Ingestion] 
-        API[FastAPI]
-        FE[Static front]
-    end
-    ING --> DB[(Supabase PostgreSQL)]
-    DB --> API
-    API --> FE
-```
+![Undercard architecture](architecture.drawio.svg)
+
+Source: [architecture.drawio](architecture.drawio), editable in draw.io.
 
 ## Components
 

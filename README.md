@@ -19,14 +19,11 @@ Personal project built to practice an end-to-end data product: ingestion, storag
 
 ## Architecture
 
-See [docs/architecture.md](docs/architecture.md).
-
-```
-PandaScore -> Ingestion -> PostgreSQL -> FastAPI -> Frontend
-```
+![Undercard architecture](docs/architecture.drawio.svg)
 
 In production: Supabase (PostgreSQL + a `pg_cron` job that triggers ingestion every minute) and one free
-Render web service (API + front + ingestion). See [docs/deploy.md](docs/deploy.md).
+Render web service (API + front + ingestion). Details in [docs/architecture.md](docs/architecture.md) and
+[docs/deploy.md](docs/deploy.md). The diagram is editable in draw.io (`docs/architecture.drawio`).
 
 ## Run locally (no external service)
 
