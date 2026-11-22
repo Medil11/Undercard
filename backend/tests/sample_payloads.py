@@ -12,6 +12,7 @@ FINISHED_MATCH = {
     "league": {"name": "Demo League", "image_url": "https://example.com/league.png"},
     "tournament": {
         "id": 77,
+        "tier": "a",
         "name": "Playoffs",
         "prizepool": "50000 United States Dollar",
         "region": "WEU",

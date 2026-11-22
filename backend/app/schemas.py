@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -23,6 +23,7 @@ class MatchOut(BaseModel):
     league_name: str | None = None
     tournament_name: str | None = None
     league_image_url: str | None = None
+    tier: str | None = None
     prizepool: str | None = None
     region: str | None = None
     country: str | None = None
@@ -57,10 +58,15 @@ class PlayerOut(BaseModel):
     role: str | None = None
     nationality: str | None = None
     image_url: str | None = None
+    birthday: date | None = None
 
 
 class TeamDetailOut(TeamOut):
     players: list[PlayerOut] = []
+
+
+class PlayerDetailOut(PlayerOut):
+    team: TeamOut | None = None
 
 
 class GameOut(BaseModel):

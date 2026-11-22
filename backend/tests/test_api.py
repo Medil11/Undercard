@@ -139,3 +139,19 @@ def test_leagues_of_a_game_and_league_filter(client, db):
     by_league = client.get("/matches", params={"league": "Demo League"}).json()
     assert sorted(m["id"] for m in by_league) == [1001, 1002]
     assert client.get("/matches", params={"league": "Other"}).json() == []
+
+
+def test_team_and_player_pages(client, db):
+    from datetime import date
+
+    seed(db)
+    db.add(Player(id=901, team_id=11, name="Ace", nationality="FR", birthday=date(2001, 5, 4)))
+    db.commit()
+    team = client.get("/teams/11").json()
+    assert team["name"] == "Alpha" and [p["name"] for p in team["players"]] == ["Ace"]
+    player = client.get("/players/901").json()
+    assert player["team"]["name"] == "Alpha" and player["birthday"] == "2001-05-04"
+    assert client.get("/teams/999").status_code == 404
+    assert client.get("/players/999").status_code == 404
+    assert [m["id"] for m in client.get("/matches", params={"team_id": 12}).json()] == [1001]
+    assert client.get("/matches/1001").json()["tier"] == "a"

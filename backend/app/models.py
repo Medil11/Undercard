@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import Date, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -24,7 +24,7 @@ class Team(Base):
     # Rosters come from a separate, rate-limited endpoint, so they are refreshed on their own clock.
     roster_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    players: Mapped[list["Player"]] = relationship(order_by="Player.name")
+    players: Mapped[list["Player"]] = relationship(order_by="Player.name", back_populates="team")
 
 
 class Player(Base):
@@ -40,6 +40,9 @@ class Player(Base):
     role: Mapped[str | None] = mapped_column(String(50))
     nationality: Mapped[str | None] = mapped_column(String(10))
     image_url: Mapped[str | None] = mapped_column(String(500))
+    birthday: Mapped[date | None] = mapped_column(Date)
+
+    team: Mapped[Team | None] = relationship(back_populates="players")
 
 
 class Game(Base):
@@ -81,6 +84,7 @@ class Match(Base):
     league_name: Mapped[str | None] = mapped_column(String(200))
     tournament_name: Mapped[str | None] = mapped_column(String(200))
     league_image_url: Mapped[str | None] = mapped_column(String(500))
+    tier: Mapped[str | None] = mapped_column(String(5))  # PandaScore tournament tier: s, a, b, c, d
     tournament_id: Mapped[int | None]  # PandaScore id, used to fetch the standings
     prizepool: Mapped[str | None] = mapped_column(
         String(200)

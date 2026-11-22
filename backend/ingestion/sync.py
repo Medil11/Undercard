@@ -8,7 +8,7 @@ Usage:
 import argparse
 import logging
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.orm import Session
@@ -49,6 +49,7 @@ def parse_match(payload: dict) -> tuple[dict, list[dict]]:
         "league_name": league.get("name"),
         "tournament_name": tournament.get("name"),
         "league_image_url": league.get("image_url"),
+        "tier": tournament.get("tier"),
         "tournament_id": tournament.get("id"),
         "prizepool": tournament.get("prizepool"),
         "region": tournament.get("region"),
@@ -119,6 +120,10 @@ def parse_player(payload: dict, team_id: int) -> dict:
     player["first_name"] = (player["first_name"] or "").strip() or None
     player["last_name"] = (player["last_name"] or "").strip() or None
     player["team_id"] = team_id
+    try:
+        player["birthday"] = date.fromisoformat(payload.get("birthday") or "")
+    except ValueError:
+        player["birthday"] = None
     return player
 
 

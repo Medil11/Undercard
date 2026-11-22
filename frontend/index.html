@@ -50,7 +50,32 @@ button{font:inherit;color:inherit;cursor:pointer}
 .seg button[aria-selected="true"]{background:var(--ink);color:var(--card)}
 .seg .c{font-weight:500;opacity:.7}
 .seg .dot{width:6px;height:6px;border-radius:50%;background:var(--live)}
-.status{text-align:right}
+.status{display:flex;gap:8px;justify-content:flex-end}
+.tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tools[hidden]{display:none}
+.mine{display:inline-flex;align-items:center;gap:6px}
+.mine .c{font-weight:500;opacity:.7}
+.mine svg,.star svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.mine[aria-pressed="true"] svg,.star[aria-pressed="true"] svg{fill:currentColor}
+.star{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:none;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px}
+.star:hover{background:var(--hover)}
+.star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.phead{display:flex;align-items:center;gap:16px;padding:16px}
+.phead .av{width:64px;height:64px;border-radius:16px;font-size:16px;flex:none}
+.phead .lgi{width:40px;height:40px;margin:0;vertical-align:0}
+.phead .tx{flex:1;min-width:0}
+.phead h1{margin:0;font-size:22px;line-height:28px}
+.phead .sub{color:var(--mut);font-size:14px;display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:2px}
+.phead .sub a{color:inherit}
+.side-t a.nm,.ros h3 a,.stand .tm a,a.pl{color:inherit;text-decoration:none}
+.side-t a.nm:hover,.ros h3 a:hover,.stand .tm a:hover,a.pl:hover .hn{text-decoration:underline}
+.favs{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 16px}
+.fav{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 4px;font-size:14px;font-weight:600}
+.fav a{display:inline-flex;align-items:center;gap:8px;color:inherit;text-decoration:none}
+.fav .av{width:24px;height:24px;font-size:9px;border-radius:50%}
+.fav .lgi{margin:0 0 0 4px;vertical-align:0}
+.fav button{border:0;background:none;color:var(--mut);padding:2px 6px;border-radius:999px;font-size:13px}
+.fav button:hover{background:var(--hover);color:var(--text)}
 .sec{display:flex;align-self:stretch;gap:4px}
 .sec a{display:flex;align-items:center;gap:8px;padding:0 16px;text-decoration:none;font-weight:700;font-size:14px;color:var(--mut);border-bottom:3px solid transparent;transition:color .15s var(--ease)}
 .sec a:hover{color:var(--text)}
@@ -210,7 +235,7 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 .mark{flex:none;width:10px;height:10px;border-radius:50%;background:var(--ink)}
 .gm.run .mark{background:var(--live)}
 .ros{display:grid;grid-template-columns:1fr 1fr}
-.ros > div{padding:0 16px 12px}
+.ros > div,.ros1{padding:0 16px 12px}
 .ros > div + div{border-left:1px solid var(--line)}
 .ros h3{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:14px;font-weight:700}
 .pl{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
@@ -260,7 +285,7 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 <div class="shell" id="shell">
   <aside class="side card" id="side" aria-label="Leagues" hidden></aside>
   <div class="col">
-    <div class="seg" id="tabs" role="tablist" aria-label="Match status"></div>
+    <div class="tools" id="tools"><div class="seg" id="tabs" role="tablist" aria-label="Match status"></div><button class="mine" id="tier" data-tier aria-pressed="false">Top tiers only</button></div>
     <main id="list" aria-live="polite"></main>
   </div>
   <aside class="side rside" id="right" aria-label="Standings" hidden></aside>
@@ -315,7 +340,15 @@ const R=[
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const gname=s=>GAMES[s]||s;
 const rank=s=>{const i=Object.keys(GAMES).indexOf(s);return i<0?999:i};
-const inGame=m=>G==="all"||m.videogame===G;
+let TOP=localStorage.getItem("undercard.top")==="1";
+// start.gg rows have no tier, but only notable events are kept anyway
+const inTier=m=>!TOP||m.source==="startgg"||m.tier==="s"||m.tier==="a";
+const inGame=m=>(G==="all"||m.videogame===G)&&inTier(m);
+let FAV=(()=>{try{return JSON.parse(localStorage.getItem("undercard.favs"))||{}}catch{return{}}})();
+FAV={teams:FAV.teams||{},leagues:FAV.leagues||{}};  // teams: id -> {name,image_url}; leagues: name -> {image_url}
+const saveFav=()=>localStorage.setItem("undercard.favs",JSON.stringify(FAV));
+const favCount=()=>Object.keys(FAV.teams).length+Object.keys(FAV.leagues).length;
+const starBtn=(attrs,on)=>`<button class="star" ${attrs} aria-pressed="${on}">${ICON.star}${on?"Following":"Follow"}</button>`;
 const view=()=>V==="live"&&!L?LIVE:DAY;
 const dayStart=off=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+off);return d};
 const dayLabel=off=>off===-1?"Yesterday":off===0?"Today":off===1?"Tomorrow":dayStart(off).toLocaleDateString("en-GB",{weekday:"short",day:"numeric"});
@@ -329,6 +362,7 @@ const STATUS={canceled:"Canceled",postponed:"Postponed"};
 const ICON={
   back:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>`,
   out:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M12.5 3.5 4 12"/></svg>`,
+  star:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m8 1.8 1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg>`,
   results:`<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="2.5"/><path d="M10 4v12M6 8v4M13 8h1.5v4H13z"/></svg>`,
   news:`<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2.5"/><path d="M6 7h8M6 10h8M6 13h5"/></svg>`};
 
@@ -389,7 +423,7 @@ function label(m){
 function statusCell(m){
   const[day,time]=when(m.scheduled_at),start=when(m.begin_at||m.scheduled_at)[1];
   if(m.status==="running")return`<span class="lv">Live</span><span>Game ${(m.team1_score||0)+(m.team2_score||0)+1}</span><span class="num">${start}</span>`;
-  const d=V==="live"||V==="team"?day:"";  // a day tab already says which day it is
+  const d=typeof V==="number"&&!L&&!CUR?"":day;  // a day tab already says which day it is
   if(m.status==="finished")return`<b>Final</b><span class="num">${d?d+" ":""}${start}</span>`;
   if(STATUS[m.status])return`<b>${STATUS[m.status]}</b><span>${d}</span>`;
   return`<b class="num">${time}</b><span>${eta(m.scheduled_at)||d}</span>`;
@@ -411,45 +445,57 @@ function row(m){
 function renderNav(){
   const data=NEWS_ON?(NEWS||[]).map(n=>({videogame:n.game||"other"})):view();
   const slugs=[...new Set([...Object.keys(GAMES),...data.map(m=>m.videogame)])].sort((a,b)=>rank(a)-rank(b));
-  const items=[["all","All games"],...slugs.filter(s=>s!=="other").map(s=>[s,gname(s)])].map(([s,l])=>[s,l,data.filter(m=>s==="all"||m.videogame===s).length]);
+  const items=[["all","All games"],...slugs.filter(s=>s!=="other").map(s=>[s,gname(s)])].map(([s,l])=>[s,l,data.filter(m=>(s==="all"||m.videogame===s)&&(NEWS_ON||inTier(m))).length]);
   document.getElementById("games").innerHTML=items.map(([s,l,c])=>
     `<button class="${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("");
   document.getElementById("sec").innerHTML=`<a href="#" ${NEWS_ON?"":'aria-current="page"'}>${ICON.results}Results</a><a href="#/news" ${NEWS_ON?'aria-current="page"':""}>${ICON.news}News</a>`;
-  document.getElementById("tabs").hidden=NEWS_ON||!!L;
+  document.getElementById("tools").hidden=NEWS_ON||!!CUR;
+  document.getElementById("tabs").hidden=!!L||V==="fav";
   const liveN=LIVE.filter(inGame).length;
   document.getElementById("tabs").innerHTML=
     `<button role="tab" aria-selected="${!CUR&&V==="live"}" data-v="live">${liveN?'<span class="dot" aria-hidden="true"></span>':""}Live<span class="c num">${liveN}</span></button>`+
     DAYS.map(o=>`<button role="tab" aria-selected="${!CUR&&V===o}" data-v="${o}">${dayLabel(o)}</button>`).join("");
-  document.getElementById("mode").innerHTML=`<button class="mine" aria-pressed="${!CUR&&V==="team"}" data-v="team">My team</button>`;
+  document.getElementById("mode").innerHTML=`<button class="mine" aria-pressed="${!CUR&&V==="fav"}" data-v="fav">${ICON.star}Favorites<span class="c num">${favCount()}</span></button><button class="mine" aria-pressed="${!CUR&&V==="team"}" data-v="team">My team</button>`;
+  document.getElementById("tier").setAttribute("aria-pressed",TOP);
 }
 function renderList(){
   const ms=view().filter(inGame);
   const lg=L;
   const el=document.getElementById("list");
-  const top=V==="team"?PICK():"";
+  const lgInfo=L&&(LEAGUES[G]||[]).find(x=>x.name===L);
+  const top=L?`<section class="card phead">${lgi({league_image_url:lgInfo?.image_url})}<div class="tx"><h1>${esc(L)}</h1><div class="sub">${esc(gname(G))}</div></div>${starBtn(`data-fav-l="${esc(L)}" data-img="${esc(lgInfo?.image_url||"")}"`,!!FAV.leagues[L])}</section>`
+    :V==="team"?PICK():V==="fav"?FAVS():"";
   if(!ms.length){
-    const msg=L?`No matches for ${esc(L)} in the last 30 days`:V==="live"?"No live matches right now"
+    const msg=L?`No matches for ${esc(L)} in the last 30 days`
+      :V==="fav"?(favCount()?"No matches for your favorites in the last 30 days":"Follow teams and leagues with the star button to see them here")
+      :V==="live"?"No live matches right now"
       :V==="team"?(TEAM?`No matches for ${esc(TEAM)} in the last 30 days`:"Choose a team to follow its matches in every game")
       :`No matches ${V===0?"today":V===1?"tomorrow":V===-1?"yesterday":"on this day"}${G==="all"?"":` for ${gname(G)}`}`;
     const go=V==="live"?`<button class="btn" data-v="0">See today's matches</button>`:G!=="all"?`<button class="btn" data-g="all">Show all games</button>`:"";
     el.innerHTML=top+`<div class="card empty"><p>${msg}</p>${go}</div>`;
     return;
   }
-  const key=m=>m.videogame+"|"+m.league_name+"|"+m.tournament_name;
-  const t=m=>new Date(m.scheduled_at);
-  const step=m=>m.status==="running"?0:m.status==="finished"?2:1;
-  const sorted=[...ms].sort(L?(a,b)=>step(a)-step(b)||(step(a)===2?t(b)-t(a):t(a)-t(b))  // a league: live, next, then results
-    :(a,b)=>V==="team"?t(b)-t(a):t(a)-t(b));  // a team's history reads newest first
-  const groups=new Map();  // insertion order follows time, so tournaments appear by their first match
-  sorted.forEach(m=>{if(!groups.has(key(m)))groups.set(key(m),[]);groups.get(key(m)).push(m)});
-  el.innerHTML=top+[...groups.values()].map(list=>{
-    const f=list[0],same=list.every(m=>fmt(m)===fmt(f));
-    return`<section class="card" aria-label="${esc(f.league_name)}"><div class="th"><span class="lg">${lgi(f)}${esc(f.league_name)}${f.tournament_name?`<span>${esc(f.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(f.videogame)}${esc(gname(f.videogame))}</span>${same?`<span>${fmt(f)}</span>`:""}</span></div>`+
-      list.map(row).join("")+`</section>`}).join("");
+  const sorted=sortMatches(ms,L||V==="fav"?"plan":V==="team"?"desc":"asc");
+  el.innerHTML=top+groupsHtml(sorted);
   // a league: standings of its current tournament (the live one, else the latest played)
   const cur=lg&&(ms.find(m=>m.status==="running")||sorted.find(m=>m.status==="finished")||sorted[0]);
   if(lg&&!(cur&&!demo&&cur.source!=="startgg"))showRight("");
   if(cur&&!demo&&cur.source!=="startgg")addStandings(cur.id,new Set(),"right",`Standings, ${cur.tournament_name||lg}`,()=>L===lg&&!CUR&&!NEWS_ON);
+}
+const step=m=>m.status==="running"?0:m.status==="finished"?2:1;
+// asc: by time; desc: newest first; plan: live, then next (soonest first), then results (newest first)
+function sortMatches(ms,order){
+  const t=m=>new Date(m.scheduled_at);
+  return[...ms].sort(order==="plan"?(a,b)=>step(a)-step(b)||(step(a)===2?t(b)-t(a):t(a)-t(b)):order==="desc"?(a,b)=>t(b)-t(a):(a,b)=>t(a)-t(b));
+}
+function groupsHtml(sorted){
+  const key=m=>m.videogame+"|"+m.league_name+"|"+m.tournament_name;
+  const groups=new Map();  // insertion order follows the sort, so tournaments appear by their first match
+  sorted.forEach(m=>{if(!groups.has(key(m)))groups.set(key(m),[]);groups.get(key(m)).push(m)});
+  return[...groups.values()].map(list=>{
+    const f=list[0],same=list.every(m=>fmt(m)===fmt(f));
+    return`<section class="card" aria-label="${esc(f.league_name)}"><div class="th"><span class="lg">${lgi(f)}${esc(f.league_name)}${f.tournament_name?`<span>${esc(f.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(f.videogame)}${esc(gname(f.videogame))}</span>${same?`<span>${fmt(f)}</span>`:""}</span></div>`+
+      list.map(row).join("")+`</section>`}).join("");
 }
 function renderSide(){
   const side=document.getElementById("side"),show=!NEWS_ON&&!CUR&&G!=="all";
@@ -482,12 +528,15 @@ async function addStandings(id,mine,where,title,still){
     const lm=r.last_match,res=lm?.winner_id?(lm.winner_id===r.team.id?"W":"L"):"";
     const last=!lm?"":right?(res?`<a href="#/match/${lm.id}" title="${esc(lm.name)}"><b class="res ${res}">${res}</b></a>`:`<a href="#/match/${lm.id}" title="${esc(lm.name)}">View</a>`)
       :`${res?`<b class="res ${res}">${res}</b>`:""}<a href="#/match/${lm.id}">${esc(lm.name)}</a>`;
-    return`<tr class="${mine.has(r.team.id)?"me":""}"><td class="num">${r.rank}</td><td><span class="tm">${av(r.team)}${esc(r.team.name)}</span></td><td>${last}</td></tr>`}).join("")}</tbody></table></section>`;
+    return`<tr class="${mine.has(r.team.id)?"me":""}"><td class="num">${r.rank}</td><td><span class="tm">${av(r.team)}<a href="#/team/${r.team.id}">${esc(r.team.name)}</a></span></td><td>${last}</td></tr>`}).join("")}</tbody></table></section>`;
   if(right){showRight(html);return}
   document.getElementById("stand")?.remove();
   document.getElementById("list").insertAdjacentHTML("beforeend",html);
 }
-function render(){renderNav();renderSide();if(NEWS_ON)renderNews();else if(CUR)showMatch(CUR,false);else renderList()}
+const FAVS=()=>favCount()?`<section class="card"><div class="sec-h"><h2>Following</h2></div><div class="favs">${
+  Object.entries(FAV.teams).map(([id,t])=>`<span class="fav"><a href="#/team/${id}">${av(t)}${esc(t.name)}</a><button data-unfav-t="${id}" aria-label="Unfollow ${esc(t.name)}">✕</button></span>`).join("")}${
+  Object.entries(FAV.leagues).map(([n,l])=>`<span class="fav">${lgi({league_image_url:l.image_url})}<span>${esc(n)}</span><button data-unfav-l="${esc(n)}" aria-label="Unfollow ${esc(n)}">✕</button></span>`).join("")}</div></section>`:"";
+function render(){renderNav();renderSide();if(NEWS_ON)renderNews();else if(CUR)showPage(false);else renderList()}
 
 /* News: #/news, headlines from esports RSS feeds via the API */
 let NEWS=null,NEWS_ON=false;
@@ -532,12 +581,21 @@ document.addEventListener("click",e=>{
 });
 
 document.addEventListener("click",async e=>{
+  const ft=e.target.closest("[data-fav-t],[data-unfav-t]"),fl=e.target.closest("[data-fav-l],[data-unfav-l]");
+  if(ft||fl){
+    if(ft){const id=ft.dataset.favT||ft.dataset.unfavT;
+      if(FAV.teams[id])delete FAV.teams[id];else FAV.teams[id]={name:ft.dataset.name,image_url:ft.dataset.img||null}}
+    else{const n=fl.dataset.favL||fl.dataset.unfavL;
+      if(FAV.leagues[n])delete FAV.leagues[n];else FAV.leagues[n]={image_url:fl.dataset.img||null}}
+    saveFav();if(V==="fav"&&!L)await loadDay();render();return;
+  }
+  if(e.target.closest("[data-tier]")){TOP=!TOP;localStorage.setItem("undercard.top",TOP?"1":"0");render();return}
   const g=e.target.closest("[data-g]"),v=e.target.closest("[data-v]");
   const l=e.target.closest("[data-l]");
   if(l){L=l.dataset.l||null;DAY=[];showRight("");render();await loadDay();render();return}
   if((g||v)&&L){L=null;if(!v)await loadDay()}  // leaving a league: back to the day lists
   if(g)G=g.dataset.g;
-  if(v){const x=v.dataset.v;V=x==="live"||x==="team"?x:+x;await loadDay()}
+  if(v){const x=v.dataset.v;V=x==="live"||x==="team"||x==="fav"?x:+x;await loadDay()}
   if(g||v){if(CUR||(NEWS_ON&&v))location.hash="";else render()}
 });
 
@@ -545,25 +603,61 @@ document.addEventListener("click",async e=>{
 const BACK=`<a class="back" href="#">${ICON.back}All matches</a>`;
 const mins=sec=>sec?`${Math.round(sec/60)} min`:"";
 function route(){
-  const id=+((location.hash.match(/^#\/match\/(-?\d+)$/)||[])[1]||0);  // start.gg ids are negative
-  CUR=id||null;
+  const hit=location.hash.match(/^#\/(match|team|player)\/(-?\d+)$/);  // start.gg ids are negative
+  CUR=hit?hit[1]+":"+hit[2]:null;
   const news=location.hash==="#/news";
   if(news!==NEWS_ON)G="all";  // each section has its own games
   NEWS_ON=news;
   renderNav();
   if(NEWS_ON){document.title="News · Undercard";renderNews();if(!NEWS)loadNews().then(()=>NEWS_ON&&render())}
-  else if(CUR)showMatch(CUR,true);else{renderList();document.title="Undercard"}
+  else if(CUR)showPage(true);else{renderList();document.title="Undercard"}
+}
+function showPage(top){
+  const[kind,id]=CUR.split(":");
+  (kind==="team"?showTeam:kind==="player"?showPlayer:showMatch)(+id,top);
+}
+const age=b=>{if(!b)return null;const d=new Date(b),n=new Date();return n.getFullYear()-d.getFullYear()-(n<new Date(n.getFullYear(),d.getMonth(),d.getDate())?1:0)};
+const notFound=what=>`${BACK}<div class="card empty"><p>${what} not found</p></div>`;
+async function showTeam(id,top){
+  const key="team:"+id,el=document.getElementById("list");
+  let t=null,ms=[];
+  if(demo){ms=R.filter(m=>m.team1?.id===id||m.team2?.id===id);t=ms[0]&&(ms[0].team1?.id===id?ms[0].team1:ms[0].team2)}
+  else try{[t,ms]=await Promise.all([fetch(base()+"/teams/"+id).then(r=>r.ok?r.json():null),getMatches("team_id="+id+"&limit=200")])}catch{}
+  if(CUR!==key)return;
+  if(!t){el.innerHTML=notFound("Team");return}
+  const game=ms[0]?.videogame,on=!!FAV.teams[id];
+  const roster=(t.players||[]).map(p=>`<a class="pl" href="#/player/${p.id}">${av({name:p.name,image_url:p.image_url})}<span class="tx"><span class="hn">${esc(p.name)}</span><span class="rn">${[[p.first_name,p.last_name].filter(Boolean).join(" "),p.role].filter(Boolean).map(esc).join(", ")}</span></span><span class="nat">${esc(p.nationality)}</span></a>`).join("");
+  el.innerHTML=`${BACK}<section class="card phead">${av(t)}<div class="tx"><h1>${esc(t.name)}</h1><div class="sub">${t.acronym?`<span>${esc(t.acronym)}</span>`:""}${game?`<span class="gn">${gico(game)}${esc(gname(game))}</span>`:""}</div></div>${starBtn(`data-fav-t="${id}" data-name="${esc(t.name)}" data-img="${esc(t.image_url||"")}"`,on)}</section>`+
+    (id>0?`<section class="card"><div class="sec-h"><h2>Roster</h2></div><div class="ros1">${roster||`<p class="note">Roster not synced yet.</p>`}</div></section>`:"")+
+    (ms.length?groupsHtml(sortMatches(ms,"plan")):`<div class="card empty"><p>No matches in the last 30 days</p></div>`);
+  document.title=t.name+" · Undercard";
+  if(top)window.scrollTo(0,0);
+}
+async function showPlayer(id,top){
+  const key="player:"+id,el=document.getElementById("list");
+  let p=null,ms=[];
+  if(!demo)try{p=await fetch(base()+"/players/"+id).then(r=>r.ok?r.json():null);if(p?.team)ms=await getMatches("team_id="+p.team.id+"&limit=100")}catch{}
+  if(CUR!==key)return;
+  if(!p){el.innerHTML=notFound("Player");return}
+  const real=[p.first_name,p.last_name].filter(Boolean).join(" "),a=age(p.birthday);
+  const facts=[["Real name",real],["Role",p.role],["Nationality",p.nationality],["Age",a!=null?`${a} (born ${new Date(p.birthday).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})})`:""]].filter(([,v])=>v);
+  el.innerHTML=`${BACK}<section class="card phead">${av({name:p.name,image_url:p.image_url})}<div class="tx"><h1>${esc(p.name)}</h1><div class="sub">${p.team?`<a href="#/team/${p.team.id}">${esc(p.team.name)}</a>`:"No current team"}</div></div></section>`+
+    (facts.length?`<section class="card"><div class="sec-h"><h2>Profile</h2></div><dl class="facts">${facts.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`:"")+
+    (ms.length?`<div class="sec-h" style="padding:0"><h2>${esc(p.team.name)} matches</h2></div>`+groupsHtml(sortMatches(ms,"plan")):"");
+  document.title=p.name+" · Undercard";
+  if(top)window.scrollTo(0,0);
 }
 async function showMatch(id,top){
+  const key="match:"+id;
   let m=null;
   if(!demo){try{const r=await fetch(base()+"/matches/"+id);if(r.ok)m=await r.json()}catch{}}
   m=m||[...LIVE,...DAY,...(demo?R:[])].find(x=>x.id===id);
-  if(CUR!==id)return;
+  if(CUR!==key)return;
   document.getElementById("list").innerHTML=m?renderDetail(m):`${BACK}<div class="card empty"><p>Match not found</p></div>`;
   document.title=m?`${m.team1?.name||"TBD"} vs ${m.team2?.name||"TBD"} · Undercard`:"Undercard";
   if(top)window.scrollTo(0,0);
   if(demo||!m||m.source==="startgg")return;
-  addStandings(id,new Set([m.team1?.id,m.team2?.id]),"list","Standings",()=>CUR===id);
+  addStandings(id,new Set([m.team1?.id,m.team2?.id]),"list","Standings",()=>CUR===key);
 }
 function renderDetail(m){
   const live=m.status==="running",fin=m.status==="finished",scored=live||fin;
@@ -572,7 +666,7 @@ function renderDetail(m){
   const[day,time]=when(m.scheduled_at),started=when(m.begin_at||m.scheduled_at);
   const stream=safeUrl(m.stream_url);
   const team=(t,lose,score,fresh)=>t
-    ?`<div class="side-t ${lose?"lo":""}">${av(t)}<span class="nm">${esc(t.name)}</span><span class="big-dots" aria-hidden="true">${dots(m,scored?score:0,fresh)}</span></div>`
+    ?`<div class="side-t ${lose?"lo":""}">${av(t)}<a class="nm" href="#/team/${t.id}">${esc(t.name)}</a><span class="big-dots" aria-hidden="true">${dots(m,scored?score:0,fresh)}</span></div>`
     :`<div class="side-t"><span class="av">?</span><span class="nm">TBD</span></div>`;
   const center=scored
     ?`<span class="score num"><span class="${fin&&!w1?"lo":""}">${m.team1_score??0}</span> – <span class="${fin&&!w2?"lo":""}">${m.team2_score??0}</span></span>${live?`<span class="pill lv">Live, game ${(m.team1_score||0)+(m.team2_score||0)+1}</span>`:`<span class="pill">Final</span>`}`
@@ -605,9 +699,9 @@ function renderDetail(m){
       const l2=run?lane("r",live):half(m.team2,"r",g);
       return`<div class="gm ${run?"run":""} ${todo?"todo":""}">${l1}<span class="c" aria-label="${c}">Game ${g.position}</span>${l2}</div>`}).join("")+`</section>`;
   }
-  const roster=t=>t?`<div><h3>${av(t)}${esc(t.name)}</h3>${(t.players||[]).length?t.players.map(p=>{
+  const roster=t=>t?`<div><h3>${av(t)}<a href="#/team/${t.id}">${esc(t.name)}</a></h3>${(t.players||[]).length?t.players.map(p=>{
       const sub=[[p.first_name,p.last_name].filter(Boolean).join(" "),p.role].filter(Boolean).map(esc).join(", ");
-      return`<div class="pl">${av({name:p.name,image_url:p.image_url})}<span class="tx"><span class="hn">${esc(p.name)}</span>${sub?`<span class="rn">${sub}</span>`:""}</span><span class="nat">${esc(p.nationality)}</span></div>`}).join("")
+      return`<a class="pl" href="#/player/${p.id}">${av({name:p.name,image_url:p.image_url})}<span class="tx"><span class="hn">${esc(p.name)}</span>${sub?`<span class="rn">${sub}</span>`:""}</span><span class="nat">${esc(p.nationality)}</span></a>`}).join("")
     :`<p class="note" style="padding:8px 0">Roster not synced yet.</p>`}</div>`:"";
   if(m.source!=="startgg"&&(m.team1||m.team2))html+=`<section class="card"><div class="sec-h"><h2>Rosters</h2></div><div class="ros">${roster(m.team1)}${roster(m.team2)}</div><p class="note">Current team rosters, not necessarily the lineup for this match.</p></section>`;
   return html;
@@ -616,6 +710,14 @@ function renderDetail(m){
 async function getMatches(query){const r=await fetch(base()+"/matches?"+query);if(!r.ok)throw 0;return r.json()}
 async function loadLive(){LIVE=demo?R.filter(m=>m.status==="running"):await getMatches("status=running&limit=200")}
 async function loadDay(){
+  if(V==="fav"&&!L){
+    const keep=m=>FAV.teams[m.team1?.id]||FAV.teams[m.team2?.id]||FAV.leagues[m.league_name];
+    if(demo){DAY=R.filter(keep);return}
+    const qs=[...Object.keys(FAV.teams).map(id=>({team_id:id})),...Object.keys(FAV.leagues).map(league=>({league}))];
+    const lists=await Promise.all(qs.map(q=>getMatches(new URLSearchParams({...q,limit:"100"})).catch(()=>[])));
+    DAY=[...new Map(lists.flat().map(m=>[m.id,m])).values()];
+    return;
+  }
   if(L){DAY=demo?R.filter(m=>m.league_name===L):await getMatches(new URLSearchParams({league:L,limit:"500"}));return}
   if(V==="live")return;
   if(V==="team"){

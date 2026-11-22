@@ -8,12 +8,14 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.config import get_settings
 from app.db import get_db
-from app.models import Match, Team
+from app.models import Match, Player, Team
 from app.schemas import (
     LeagueOut,
     MatchDetailOut,
     MatchOut,
+    PlayerDetailOut,
     StandingOut,
+    TeamDetailOut,
     TeamSuggestion,
     VideogameOut,
 )
@@ -34,6 +36,7 @@ def list_matches(
     until: datetime | None = Query(None, description="scheduled before (ISO 8601)"),
     team: str | None = Query(None, description="team name, any game, case-insensitive"),
     league: str | None = Query(None, description="exact league name, e.g. LEC"),
+    team_id: int | None = Query(None, description="one team, by id"),
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
 ) -> list[Match]:
@@ -47,6 +50,8 @@ def list_matches(
         query = query.where(or_(Match.team1.has(same), Match.team2.has(same)))
     if league:
         query = query.where(Match.league_name == league)
+    if team_id is not None:
+        query = query.where(or_(Match.team1_id == team_id, Match.team2_id == team_id))
     if since:
         query = query.where(Match.scheduled_at >= since)
     if until:
@@ -108,6 +113,22 @@ def search_teams(
         .limit(20)
     )
     return [TeamSuggestion(name=name, image_url=url) for name, url in db.execute(query)]
+
+
+@router.get("/teams/{team_id}", response_model=TeamDetailOut)
+def get_team(team_id: int, db: Session = Depends(get_db)) -> Team:
+    team = db.get(Team, team_id, options=[selectinload(Team.players)])
+    if team is None:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return team
+
+
+@router.get("/players/{player_id}", response_model=PlayerDetailOut)
+def get_player(player_id: int, db: Session = Depends(get_db)) -> Player:
+    player = db.get(Player, player_id, options=[selectinload(Player.team)])
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return player
 
 
 @router.get("/leagues", response_model=list[LeagueOut])

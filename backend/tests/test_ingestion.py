@@ -157,3 +157,14 @@ def test_purge_old_removes_matches_and_games(db):
     assert purge_old(db, NOW + timedelta(days=31)) == 1
     assert db.get(Match, 1001) is None
     assert db.scalars(select(Game)).all() == []
+
+
+def test_parse_player_reads_the_birthday():
+    from datetime import date
+
+    from ingestion.sync import parse_player
+
+    assert parse_player({"id": 1, "name": "A", "birthday": "1995-04-20"}, 11)["birthday"] == date(
+        1995, 4, 20
+    )
+    assert parse_player({"id": 1, "name": "A", "birthday": None}, 11)["birthday"] is None
