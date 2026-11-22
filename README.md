@@ -19,8 +19,11 @@ Personal project built to practice an end-to-end data product: ingestion, storag
 See [docs/architecture.md](docs/architecture.md).
 
 ```
-PandaScore -> Ingestion (Lambda/worker) -> PostgreSQL -> FastAPI -> Frontend
+PandaScore -> Ingestion -> PostgreSQL -> FastAPI -> Frontend
 ```
+
+In production: Supabase (PostgreSQL + a `pg_cron` job that triggers ingestion every minute) and one free
+Render web service (API + front + ingestion). See [docs/deploy.md](docs/deploy.md).
 
 ## Run locally (no external service)
 
@@ -31,6 +34,7 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate        # Windows PowerShell: .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
+alembic upgrade head             # creates the local SQLite schema
 python -m ingestion.seed_demo    # fills a local SQLite file with fictional matches
 uvicorn app.main:app --reload
 ```
@@ -38,7 +42,7 @@ uvicorn app.main:app --reload
 Open http://localhost:8000: FastAPI serves the front (`frontend/index.html`) and the API.
 Interactive API docs: http://localhost:8000/docs.
 
-To reset the demo data, delete `backend/esport_live.db` and run the seed again.
+To reset the demo data, delete `backend/esport_live.db`, run `alembic upgrade head`, then the seed again.
 
 ### Real data (optional)
 

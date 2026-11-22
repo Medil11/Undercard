@@ -1,0 +1,22 @@
+# Render Blueprint: one free web service serving the API and the front.
+# Ingestion is triggered every minute by a Supabase pg_cron job calling POST /internal/sync
+# (see docs/deploy.md), which also keeps the free instance awake.
+services:
+  - type: web
+    name: undercard
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -e ./backend
+    startCommand: cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL # Supabase session pooler URI, see docs/deploy.md
+        sync: false
+      - key: PANDASCORE_TOKEN
+        sync: false
+      - key: SYNC_SECRET # copy this value into the Supabase cron script
+        generateValue: true

@@ -14,6 +14,7 @@ Reply to the user in French. Keep code, comments and docs in English.
 
 ```bash
 pip install -e ".[dev]"
+alembic upgrade head                     # create or update the schema (needed once, then after model changes)
 python -m ingestion.seed_demo            # fictional demo matches, no token needed
 python -m ingestion.sync                 # one sync from PandaScore (needs backend/.env)
 python -m ingestion.sync --loop --interval 60
@@ -21,18 +22,20 @@ uvicorn app.main:app --reload            # front + API on http://localhost:8000
 ruff check . && ruff format --check . && pytest -q
 ```
 
-Delete `backend/esport_live.db` to reset the local data.
+To reset local data: delete `backend/esport_live.db`, then `alembic upgrade head`.
 
 ## Rules
 
 - Never commit `backend/.env`. `PANDASCORE_TOKEN` stays on the backend, never in the browser.
-- Everything stays free and local for now. No paid service, no account other than the PandaScore token.
+- Everything stays free. Accounts allowed: PandaScore, Supabase (Postgres + pg_cron) and Render (web service).
+  Deployment is documented in `docs/deploy.md`; secrets live in Render's environment and Supabase Vault only.
 - PandaScore conventions: Bearer auth, `page[size]` max 100, `sort=field` puts nulls first when ascending
   (use `scheduled_at`, not `begin_at`), plan limit 1,000 requests per hour, one sync cycle = 3 requests
   plus at most 1 for rosters (`/teams?filter[id]=`, 100 teams per call, refreshed every 24 h).
 - Real payload facts: `match_type` is `best_of` or `first_to` (Overwatch: `number_of_games` = wins needed).
   StarCraft 2 matches are player vs player and are skipped. Per-player stats endpoints return 403 on the free plan.
-- Schema changes have no migrations yet: delete `backend/esport_live.db` after changing `app/models.py`.
+- Schema changes go through Alembic: edit `app/models.py`, then `alembic revision --autogenerate -m "..."`,
+  review and commit the migration. Never `create_all` and never edit production tables by hand.
 - Run lint and tests before every commit. Conventional commits, small changes.
 - Do not invent API fields: check the real payload before relying on a field.
 
