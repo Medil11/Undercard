@@ -128,3 +128,14 @@ def test_standings_are_fetched_once_then_cached(client, db, monkeypatch):
     assert calls == [77]  # second call served from the cache
     assert client.get("/matches/1002/standings").json() == []  # no tournament id
     assert client.get("/matches/999/standings").status_code == 404
+
+
+def test_leagues_of_a_game_and_league_filter(client, db):
+    seed(db)
+    assert client.get("/leagues", params={"videogame": "league-of-legends"}).json() == [
+        {"name": "Demo League", "image_url": "https://example.com/league.png", "matches": 1}
+    ]
+    assert client.get("/leagues", params={"videogame": "dota-2"}).json() == []
+    by_league = client.get("/matches", params={"league": "Demo League"}).json()
+    assert sorted(m["id"] for m in by_league) == [1001, 1002]
+    assert client.get("/matches", params={"league": "Other"}).json() == []

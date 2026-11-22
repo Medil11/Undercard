@@ -9,7 +9,14 @@ from sqlalchemy.orm import Session, selectinload
 from app.config import get_settings
 from app.db import get_db
 from app.models import Match, Team
-from app.schemas import MatchDetailOut, MatchOut, StandingOut, TeamSuggestion, VideogameOut
+from app.schemas import (
+    LeagueOut,
+    MatchDetailOut,
+    MatchOut,
+    StandingOut,
+    TeamSuggestion,
+    VideogameOut,
+)
 from ingestion.pandascore_client import PandaScoreClient
 
 router = APIRouter(tags=["matches"])
@@ -26,6 +33,7 @@ def list_matches(
     since: datetime | None = Query(None, description="scheduled at or after (ISO 8601)"),
     until: datetime | None = Query(None, description="scheduled before (ISO 8601)"),
     team: str | None = Query(None, description="team name, any game, case-insensitive"),
+    league: str | None = Query(None, description="exact league name, e.g. LEC"),
     limit: int = Query(50, ge=1, le=500),
     db: Session = Depends(get_db),
 ) -> list[Match]:
@@ -37,6 +45,8 @@ def list_matches(
     if team:
         same = func.lower(Team.name) == team.strip().lower()
         query = query.where(or_(Match.team1.has(same), Match.team2.has(same)))
+    if league:
+        query = query.where(Match.league_name == league)
     if since:
         query = query.where(Match.scheduled_at >= since)
     if until:
@@ -98,6 +108,21 @@ def search_teams(
         .limit(20)
     )
     return [TeamSuggestion(name=name, image_url=url) for name, url in db.execute(query)]
+
+
+@router.get("/leagues", response_model=list[LeagueOut])
+def list_leagues(
+    videogame: str = Query(..., description="game slug, e.g. valorant"),
+    db: Session = Depends(get_db),
+) -> list[LeagueOut]:
+    """Leagues of one game that have matches in the database, busiest first."""
+    rows = db.execute(
+        select(Match.league_name, func.max(Match.league_image_url), func.count(Match.id))
+        .where(Match.videogame == videogame, Match.league_name.is_not(None))
+        .group_by(Match.league_name)
+        .order_by(func.count(Match.id).desc(), Match.league_name)
+    ).all()
+    return [LeagueOut(name=n, image_url=u, matches=c) for n, u, c in rows]
 
 
 @router.get("/videogames", response_model=list[VideogameOut])

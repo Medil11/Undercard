@@ -93,6 +93,12 @@ class StandingOut(BaseModel):
     last_match: StandingMatch | None = None
 
 
+class LeagueOut(BaseModel):
+    name: str
+    image_url: str | None = None
+    matches: int
+
+
 class TeamSuggestion(BaseModel):
     name: str
     image_url: str | None = None
