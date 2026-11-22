@@ -19,7 +19,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="Esport Live", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Undercard", version="0.1.0", lifespan=lifespan)
 
 # Read-only public data: any origin may GET it (needed if the front is opened from a file
 # or from another local dev server).

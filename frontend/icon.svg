@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Undercard</title>
+  <!-- Undercard mark: two series tapes facing across the VS axis; red is the game in play. -->
+  <rect width="32" height="32" fill="#0c0c0c"/>
+  <rect x="15" y="4" width="2" height="24" fill="#ffd400"/>
+  <rect x="3" y="13" width="5" height="6" fill="#f5f5f0"/>
+  <rect x="9" y="13" width="5" height="6" fill="#ff3326"/>
+  <rect x="18" y="13" width="5" height="6" fill="#ff3326"/>
+  <rect x="24" y="13" width="5" height="6" fill="#3a3a37"/>
+</svg>

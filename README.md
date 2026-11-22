@@ -1,4 +1,6 @@
-# Esport Live
+# Undercard
+
+![Undercard](frontend/logo.svg)
 
 FlashScore-style live scores for esports: matches in progress, upcoming fixtures and results across the major games (League of Legends, CS2, Dota 2, Valorant, ...).
 
