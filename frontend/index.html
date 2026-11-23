@@ -218,7 +218,8 @@ a.row:focus-visible{outline-offset:-2px;border-radius:var(--r-card)}
 .mid .btn{margin-top:8px}
 .sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 16px 8px}
 .sec-h h2{margin:0;font-size:15px;font-weight:700}
-.tv{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+.tv-c{padding:12px}
+.tv{display:block;width:100%;max-width:480px;margin:0 auto;aspect-ratio:16/9;border:0;border-radius:10px;background:#000}
 .bk-wrap{overflow-x:auto;padding:0 16px 16px}
 .bk-wrap h3{margin:8px 0;font-size:13px;font-weight:600;color:var(--mut)}
 .bk{display:flex;gap:16px;width:max-content}
@@ -706,7 +707,7 @@ function renderDetail(m){
   let html=`${BACK}<section class="card"><div class="th"><span class="lg">${lgi(m)}${esc(m.league_name)}${m.tournament_name?`<span>${esc(m.tournament_name)}</span>`:""}</span><span class="rt"><span class="gn">${gico(m.videogame)}${esc(gname(m.videogame))}</span></span></div>
   <div class="hero">${team(m.team1,fin&&!w1,m.team1_score,f1)}<div class="mid">${center}<span class="fmt">${fmt(m)}${scored?`, started ${started[0]==="Today"?"":started[0]+" "}${started[1]}`:""}</span>${stream?`<a class="btn" href="${esc(stream)}" target="_blank" rel="noopener noreferrer">Watch stream${ICON.out}</a>`:""}</div>${team(m.team2,fin&&!w2,m.team2_score,f2)}</div></section>`;
   const tw=live&&stream&&/^https:\/\/(?:www\.)?twitch\.tv\/(\w+)\/?$/.exec(stream);
-  if(tw)html+=`<section class="card"><iframe class="tv" src="https://player.twitch.tv/?channel=${tw[1]}&parent=${encodeURIComponent(location.hostname)}&autoplay=false" title="${esc(tw[1])} live on Twitch" allowfullscreen></iframe></section>`;
+  if(tw)html+=`<section class="card tv-c"><iframe class="tv" src="https://player.twitch.tv/?channel=${tw[1]}&parent=${encodeURIComponent(location.hostname)}&autoplay=false" title="${esc(tw[1])} live on Twitch" allowfullscreen></iframe></section>`;
   const prize=m.prizepool&&m.prizepool.replace(/^\d+/,n=>(+n).toLocaleString("en"));
   const facts=[["Season",m.serie_name],["Prize pool",prize],["Region",[m.region,m.country].filter(Boolean).join(", ")]].filter(([,v])=>v);
   if(facts.length)html+=`<section class="card"><div class="sec-h"><h2>Tournament</h2></div><dl class="facts">${facts.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></section>`;
