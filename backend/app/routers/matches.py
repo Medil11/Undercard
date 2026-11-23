@@ -10,6 +10,7 @@ from app.config import get_settings
 from app.db import get_db
 from app.models import Match, Player, Team
 from app.schemas import (
+    BracketMatch,
     LeagueOut,
     MatchDetailOut,
     MatchOut,
@@ -25,7 +26,7 @@ router = APIRouter(tags=["matches"])
 log = logging.getLogger("api")
 STANDINGS_TTL = 600  # seconds; fetched on demand, so each tournament costs at most 6 requests/hour
 # shortcut: per-process cache, fine for one Render instance; move to the database if it scales out
-_standings: dict[int, tuple[float, list[dict]]] = {}
+_standings: dict[tuple[str, int], tuple[float, list[dict]]] = {}
 
 
 @router.get("/matches", response_model=list[MatchOut])
@@ -77,26 +78,88 @@ def get_match(match_id: int, db: Session = Depends(get_db)) -> Match:
     return match
 
 
-@router.get("/matches/{match_id}/standings", response_model=list[StandingOut])
-def get_standings(match_id: int, db: Session = Depends(get_db)) -> list[dict]:
-    """Standings of the match's tournament, fetched from PandaScore and cached for 10 minutes."""
+def _tournament_data(match_id: int, kind: str, db: Session) -> list[dict]:
+    """A PandaScore tournament endpoint ("standings" or "brackets"), cached 10 minutes."""
     match = db.get(Match, match_id)
     if match is None:
         raise HTTPException(status_code=404, detail="Match not found")
     if match.source != "pandascore" or match.tournament_id is None:
         return []
-    cached = _standings.get(match.tournament_id)
+    key = (kind, match.tournament_id)
+    cached = _standings.get(key)
     if cached and time.monotonic() - cached[0] < STANDINGS_TTL:
         return cached[1]
     settings = get_settings()
     try:
         with PandaScoreClient(settings.pandascore_token, settings.pandascore_base_url) as client:
-            rows = client.standings(match.tournament_id)
+            rows = getattr(client, kind)(match.tournament_id)
     except Exception:
-        log.exception("standings fetch failed for tournament %s", match.tournament_id)
+        log.exception("%s fetch failed for tournament %s", kind, match.tournament_id)
         return cached[1] if cached else []  # stale beats empty
-    _standings[match.tournament_id] = (time.monotonic(), rows)
+    _standings[key] = (time.monotonic(), rows)
     return rows
+
+
+@router.get("/matches/{match_id}/standings", response_model=list[StandingOut])
+def get_standings(match_id: int, db: Session = Depends(get_db)) -> list[dict]:
+    """Standings of the match's tournament, fetched from PandaScore and cached for 10 minutes."""
+    return _tournament_data(match_id, "standings", db)
+
+
+@router.get("/matches/{match_id}/bracket", response_model=list[BracketMatch])
+def get_bracket(match_id: int, db: Session = Depends(get_db)) -> list[dict]:
+    """Playoff tree of the match's tournament; empty when its matches are not linked (groups)."""
+    return layout_bracket(_tournament_data(match_id, "brackets", db))
+
+
+def layout_bracket(raw: list[dict]) -> list[dict]:
+    """Place each match in the upper or lower bracket and in a round column, from previous_matches.
+
+    A match fed by a loser, or by a lower-bracket winner, is in the lower bracket, unless an
+    upper-bracket winner also feeds it (the grand final). Its round is one more than its latest
+    same-bracket feeder.
+    """
+    if not any(m.get("previous_matches") for m in raw):
+        return []
+    by_id = {m["id"]: m for m in raw}
+    side: dict[int, str] = {}
+    rnd: dict[int, int] = {}
+
+    def place(mid: int, seen: frozenset = frozenset()) -> None:
+        if mid in side or mid in seen:
+            return
+        prev = [p for p in by_id[mid].get("previous_matches") or [] if p["match_id"] in by_id]
+        for p in prev:
+            place(p["match_id"], seen | {mid})
+        win = [side.get(p["match_id"]) for p in prev if p["type"] == "winner"]
+        lower = any(p["type"] == "loser" for p in prev) or "lower" in win
+        side[mid] = "lower" if lower and "upper" not in win else "upper"
+        same = [
+            rnd.get(p["match_id"], 0)
+            for p in prev
+            if side.get(p["match_id"]) == side[mid] and p["type"] == "winner"
+        ]
+        rnd[mid] = 1 + max(same, default=0)
+
+    for mid in by_id:
+        place(mid)
+    out = []
+    for m in sorted(raw, key=lambda m: m["id"]):
+        scores = {r["team_id"]: r["score"] for r in m.get("results") or []}
+        teams = [o["opponent"] for o in m.get("opponents") or [] if o.get("opponent")]
+        out.append(
+            {
+                "id": m["id"],
+                "name": m.get("name") or "",
+                "status": m.get("status") or "not_started",
+                "scheduled_at": m.get("scheduled_at"),
+                "winner_id": m.get("winner_id"),
+                "bracket": side[m["id"]],
+                "round": rnd[m["id"]],
+                "teams": [{**t, "score": scores.get(t["id"])} for t in teams],
+            }
+        )
+    return out
 
 
 @router.get("/teams", response_model=list[TeamSuggestion])

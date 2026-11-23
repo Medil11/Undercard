@@ -99,6 +99,21 @@ class StandingOut(BaseModel):
     last_match: StandingMatch | None = None
 
 
+class BracketTeam(TeamOut):
+    score: int | None = None
+
+
+class BracketMatch(BaseModel):
+    id: int
+    name: str
+    status: str
+    scheduled_at: datetime | None = None
+    winner_id: int | None = None
+    bracket: str  # "upper" or "lower"
+    round: int
+    teams: list[BracketTeam]
+
+
 class LeagueOut(BaseModel):
     name: str
     image_url: str | None = None

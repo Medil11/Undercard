@@ -155,3 +155,40 @@ def test_team_and_player_pages(client, db):
     assert client.get("/players/999").status_code == 404
     assert [m["id"] for m in client.get("/matches", params={"team_id": 12}).json()] == [1001]
     assert client.get("/matches/1001").json()["tier"] == "a"
+
+
+def test_bracket_layout_double_elimination(client, db, monkeypatch):
+    from app.routers import matches
+
+    def m(mid, *prev, results=()):
+        return {
+            "id": mid,
+            "name": f"M{mid}",
+            "status": "finished",
+            "previous_matches": [{"type": t, "match_id": p} for t, p in prev],
+            "opponents": [{"opponent": {"id": 11, "name": "Alpha"}}] if results else [],
+            "results": [{"team_id": 11, "score": s} for s in results],
+        }
+
+    raw = [
+        m(1, results=(2,)),
+        m(2),
+        m(3, ("winner", 1), ("winner", 2)),  # upper final
+        m(4, ("loser", 1), ("loser", 2)),  # lower round 1
+        m(5, ("winner", 4), ("loser", 3)),  # lower final
+        m(6, ("winner", 3), ("winner", 5)),  # grand final
+    ]
+    seed(db)
+    monkeypatch.setattr(matches.PandaScoreClient, "brackets", lambda self, tid: raw)
+    monkeypatch.setattr(matches, "_standings", {})
+    out = {b["id"]: (b["bracket"], b["round"]) for b in client.get("/matches/1001/bracket").json()}
+    assert out == {
+        1: ("upper", 1),
+        2: ("upper", 1),
+        3: ("upper", 2),
+        4: ("lower", 1),
+        5: ("lower", 2),
+        6: ("upper", 3),
+    }
+    assert matches.layout_bracket(raw)[0]["teams"] == [{"id": 11, "name": "Alpha", "score": 2}]
+    assert matches.layout_bracket([m(1), m(2)]) == []  # groups: no links, no tree

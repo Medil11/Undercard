@@ -62,6 +62,12 @@ class PandaScoreClient:
         response.raise_for_status()
         return response.json()
 
+    def brackets(self, tournament_id: int) -> list[dict]:
+        """Every match of a tournament, with previous_matches: the links of the playoff tree."""
+        response = self._http.get(f"/tournaments/{tournament_id}/brackets")
+        response.raise_for_status()
+        return response.json()
+
     def close(self) -> None:
         self._http.close()
 
