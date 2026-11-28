@@ -465,7 +465,7 @@ function renderNav(){
     CH_ON?`<button aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}</button>`
     :`<button class="${c?"":"z"}" aria-pressed="${G===s}" data-g="${esc(s)}">${gico(s)}${esc(l)}<span class="c num">${c}</span></button>`).join("");
   const res=!NEWS_ON&&!CH_ON,cur=on=>on?'aria-current="page"':"";
-  document.getElementById("sec").innerHTML=`<a href="#" ${cur(res)}>${ICON.results}Results</a><a href="#/news" ${cur(NEWS_ON)}>${ICON.news}News</a><a href="#/leagues" ${cur(CH_ON)}>${ICON.leagues}Leagues</a>`;
+  document.getElementById("sec").innerHTML=`<a href="#" ${cur(res)}>${ICON.results}Results</a><a href="#/news" ${cur(NEWS_ON)}>${ICON.news}News</a><a href="#/ranking" ${cur(CH_ON)}>${ICON.leagues}Ranking</a>`;
   document.getElementById("tools").hidden=!res||!!CUR;
   document.getElementById("tabs").hidden=!!L||V==="fav";
   const liveN=LIVE.filter(inGame).length;
@@ -523,7 +523,7 @@ async function loadLeagues(g){
   if(demo){LEAGUES[g]=[...new Set(R.filter(m=>m.videogame===g).map(m=>m.league_name))].map(name=>({name,matches:R.filter(m=>m.league_name===name).length}));return}
   try{const r=await fetch(base()+"/leagues?videogame="+encodeURIComponent(g));LEAGUES[g]=r.ok?await r.json():[]}catch{LEAGUES[g]=[]}
 }
-/* Leagues section (#/leagues): game, then league, then the standings of its current tournament */
+/* Ranking section (#/ranking): game, then league, then the standings of its current tournament */
 let CH_ON=false,CHL=null;
 const STAND={};  // league -> {at, title, rows}, refetched after 10 minutes like the API cache
 async function loadStand(l){
@@ -541,7 +541,7 @@ const standTable=rows=>`<table class="stand"><thead><tr><th>#</th><th>Team</th><
   return`<tr><td class="num">${r.rank}</td><td><span class="tm">${av(r.team)}<a href="#/team/${r.team.id}">${esc(r.team.name)}</a></span></td><td>${lm?`${res?`<b class="res ${res}">${res}</b>`:""}<a href="#/match/${lm.id}">${esc(lm.name)}</a>`:""}</td></tr>`}).join("")}</tbody></table>`;
 function renderChamps(){
   const el=document.getElementById("list");
-  document.title="Leagues · Undercard";
+  document.title="Ranking · Undercard";
   if(G==="all"){el.innerHTML=`<section class="card"><div class="sec-h"><h2>Pick a game</h2></div><div class="picks">${
     Object.keys(GAMES).map(g=>`<button class="lg-b" data-g="${esc(g)}">${gico(g)}<span class="n">${esc(gname(g))}</span></button>`).join("")}</div></section>`;return}
   const list=LEAGUES[G];
@@ -630,7 +630,7 @@ const mins=sec=>sec?`${Math.round(sec/60)} min`:"";
 function route(){
   const hit=location.hash.match(/^#\/(match|team|player)\/(-?\d+)$/);  // start.gg ids are negative
   CUR=hit?hit[1]+":"+hit[2]:null;
-  const news=location.hash==="#/news",champs=location.hash==="#/leagues";
+  const news=location.hash==="#/news",champs=location.hash==="#/ranking";
   if(news!==NEWS_ON||champs!==CH_ON){G="all";CHL=null}  // each section has its own games
   NEWS_ON=news;CH_ON=champs;
   renderNav();renderSide();
