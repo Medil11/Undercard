@@ -792,7 +792,7 @@ function simulate(){
   if(m[k]+1>=need(m))return;
   m[k]++;render();
 }
-async function refresh(){if(document.activeElement?.closest?.("#pick"))return;try{await loadLive();await loadDay();render()}catch{}}
+async function refresh(){if(document.hidden||document.activeElement?.closest?.("#pick"))return;try{await loadLive();await loadDay();render()}catch{}}
 init();
 </script>
 </body>

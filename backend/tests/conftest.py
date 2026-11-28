@@ -6,6 +6,12 @@ from sqlalchemy.pool import StaticPool
 
 from app.db import Base, get_db
 from app.main import app
+from ingestion.store import written
+
+
+@pytest.fixture(autouse=True)
+def forget_written():
+    written.clear()  # each test has its own database
 
 
 @pytest.fixture

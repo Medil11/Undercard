@@ -18,6 +18,7 @@ from app.db import SessionLocal
 from app.models import Game, Match, Player, SyncStatus, Team
 from ingestion.pandascore_client import MAX_PAGE_SIZE, STATUSES, PandaScoreClient
 from ingestion.startgg import StartggClient, sync_startgg
+from ingestion.store import save_match, written
 
 log = logging.getLogger("ingestion")
 
@@ -105,13 +106,7 @@ def is_team_match(payload: dict) -> bool:
 
 def upsert_match(session: Session, payload: dict) -> None:
     match, teams = parse_match(payload)
-    for team in teams:
-        session.merge(Team(**team))
-    session.flush()  # teams must exist before the match references them
-    session.merge(Match(**match))
-    session.flush()  # the match must exist before its games reference it
-    for game in parse_games(payload):
-        session.merge(Game(**game))
+    save_match(session, match, teams, parse_games(payload))
 
 
 def parse_player(payload: dict, team_id: int) -> dict:
@@ -163,6 +158,7 @@ def refresh_rosters(
 def delete_match(session: Session, match: Match) -> None:
     session.execute(delete(Game).where(Game.match_id == match.id))
     session.delete(match)
+    written.pop(match.id, None)  # write it again if the provider brings it back
 
 
 def refresh_stale(session: Session, client: PandaScoreClient, seen: set[int], now: datetime) -> int:
@@ -218,6 +214,7 @@ def record_sync(
     if error is None:
         status.last_success_at, status.last_count = now, count
     else:
+        written.clear()  # a failed cycle may have rolled back writes
         status.last_error_at, status.last_error = now, error[:500]
     session.add(status)
     session.commit()
@@ -252,6 +249,7 @@ def sync_once(
             count += sync_startgg(session, startgg, now=now)
         except Exception:
             session.rollback()
+            written.clear()
             log.exception("start.gg sync failed")
     purge_old(session, now)
     record_sync(session, now, count=count)

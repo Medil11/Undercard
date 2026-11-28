@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import event, select
 
 from app.models import Game, Match, Player, SyncStatus, Team
 from ingestion.pandascore_client import PandaScoreClient
@@ -168,3 +168,15 @@ def test_parse_player_reads_the_birthday():
         1995, 4, 20
     )
     assert parse_player({"id": 1, "name": "A", "birthday": None}, 11)["birthday"] is None
+
+
+def test_unchanged_match_is_not_read_again(db):
+    upsert_match(db, FINISHED_MATCH)
+    db.commit()
+    statements = []
+    event.listen(db.get_bind(), "before_cursor_execute", lambda *a: statements.append(a[2]))
+    upsert_match(db, FINISHED_MATCH)
+    assert statements == []
+    upsert_match(db, {**FINISHED_MATCH, "name": "renamed"})
+    db.commit()
+    assert statements

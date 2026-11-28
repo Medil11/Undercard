@@ -18,7 +18,7 @@ from datetime import UTC, datetime, timedelta
 import httpx
 from sqlalchemy.orm import Session
 
-from app.models import Game, Match, Team
+from ingestion.store import save_match
 
 log = logging.getLogger("ingestion")
 
@@ -251,13 +251,7 @@ def sync_startgg(
                 if parsed is None:
                     continue
                 match, players, games = parsed
-                for player in players:
-                    session.merge(Team(**player))
-                session.flush()
-                session.merge(Match(**match))
-                session.flush()
-                for game in games:
-                    session.merge(Game(**game))
+                save_match(session, match, players, games)
                 count += 1
             page += 1
         # Unplayed sets (a bracket reset) stay open forever, so trust the event state instead.
